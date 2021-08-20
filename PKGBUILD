@@ -16,11 +16,15 @@ package() {
     mkdir -p "$pkgdir/usr/share/licenses/$pkgname"
 
     # copy man pages to fakeroot
-    cp *.1 "$srcdir/$pkgname/$pkgdir/usr/share/man/man1/."
+    cd "$srcdir/$pkgname"
+    for mp in *.1; do
+        cp "$mp" "$pkgdir/usr/share/man/man1/$mp"
+    done
 
     # copy license to fakeroot
-    cp LICENSE "$srcdir/$pkgname/$pkgdir/usr/share/licenses/$pkgname/."
+    cp LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 
     # clean up VCS stuff
+    cd ../..
     rm -rf "$srcdir" "$pkgname"
 }
