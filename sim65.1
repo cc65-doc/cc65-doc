@@ -1,0 +1,161 @@
+.TH sim65 1 "August 2021" "0.1.0" "User Manuals"
+.SH NAME
+sim65 \- 6502/65C02 CPU simulator.
+
+.SH SYNOPSIS
+sim65 [\fIoptions\fR] \fIfile\fR [\fIarguments\fR]
+
+.SH DESCRIPTION
+sim65 is used as part of the toolchain to test 6502 or 65C02 code. The binary to
+test should be compiled with --target sim6502 or --target sim65c02.
+
+.SH OPTIONS
+
+.TP
+.BR \-h ", " \-\-help
+Print a short option summary.
+
+.TP
+.BR \-c ", " \-\-cycles
+Print the number of executed CPU cycles when the program terminates. The cycles
+for the final "jmp exit" are not included in this count.
+
+.TP
+.BR \-V ", " \-\-version
+Print the version number of the utility. When submitting a bug report, please
+include the operating system you're using, and the compiler version.
+
+.TP
+.BR \-x " " \fInum\fR
+Exit simulation after \fInum\fR cycles.
+
+.SH INPUT & OUTPUT
+
+The simulator will read one binary file per invocation and can log the program
+loading and paravirtualization calls to stderr.
+
+Example output for the command
+
+.RS
+sim65 --verbose --verbose samples/gunzip65
+
+Loaded 'samples/gunzip65' at $0200-$151F
+.br
+PVWrite ($0001, $13C9, $000F)
+.br
+GZIP file name:PVWrite ($0001, $151F, $0001)
+
+PVRead ($0000, $FFD7, $0001)
+.br
+PVOpen ("", $0001)
+.br
+PVRead ($0003, $1520, $6590)
+.br
+PVClose ($0003)
+.br
+PVWrite ($0001, $13D9, $000F)
+.br
+Not GZIP formatPVWrite ($0001, $151F, $0001)
+
+PVExit ($01)
+.RE
+
+.SH CREATING A TEST IN C
+
+For a C test compiled and linked with --target sim6502 the command line
+arguments to sim65 will be passed to main, and the return value from main will
+become sim65's exit code. The exit function may also be used to terminate with
+an exit code.
+
+Exit codes are limited to 8 bits.
+
+The standard C library high level file input and output is functional. A sim65
+application can be written like a command line application, providing arguments
+to main and using the stdio.h interfaces.
+
+Internally, file input and output is provided at a lower level by a set of
+built-in paravirtualization functions (see below).
+
+.SH CREATING A TEST IN ASSEMBLY
+
+Assembly tests may similarly be assembled and linked with --target sim6502 or
+--target sim65c02, and the sim65 library provides an exit symbol that the
+program may JMP to terminate with the current A register value as an exit code.
+
+The binary file has a 12 byte header:
+
+.RS
+.IP - 2
+5 byte signature: $73, $69, $6D, $36, $35 or 'sim65'
+
+.IP - 2
+1 byte version: 2
+
+.IP - 2
+1 byte CPU type: 0 = 6502, 1 = 65C02
+
+.IP - 2
+1 byte sp address: the zero page address of the C parameter stack pointer sp
+used by the paravirtualization functions
+
+.IP - 2
+1 word load address: where to load the data from the file into memory
+(default: $0200)
+
+.IP - 2
+1 word reset address: specifies where to begin execution after loading
+(default: $0200)
+.RE
+
+Other internal details:
+
+.RS
+.IP - 2
+The entire 64 kilobyte address space is writeable RAM. Aside from the loaded
+binary, the reset vector at $FFFC will be pre-loaded with the given reset
+address.
+
+.IP - 2
+The exit address is $FFF9. Jumping to this address will terminate execution
+with the A register value as an exit code.
+
+.IP - 2
+Several bytes immediately below the vector table are reserved for
+paravirtualization functions. Except for exit, a JSR to one of these addresses
+will return immediately after performing a special function. These use cc65
+calling conventions, and are intended for use with the sim65 target C library.
+
+.IP - 2
+IRQ and NMI events will not be generated, though BRK can be used if the IRQ
+vector at $FFFE is manually prepared by the test code.
+.RE
+
+.SH COPYRIGHT
+sim65 (and all cc65 binutils) are (C) Copyright 1998-2000 Ullrich von Bassewitz
+and others. For usage of the binaries and/or sources the following conditions do
+apply:
+
+This software is provided 'as-is', without any expressed or implied warranty. In
+no event will the authors be held liable for any damages arising from the use of
+this software.
+
+Permission is granted to anyone to use this software for any purpose, including
+commercial applications, and to alter it and redistribute it freely, subject to
+the following restrictions:
+
+.IP 1.
+The origin of this software must not be misrepresented; you must not claim that
+you wrote the original software. If you use this software in a product, an
+acknowledgment in the product documentation would be appreciated but is not
+required.
+
+.IP 2.
+Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original software.
+
+.IP 3.
+This notice may not be removed or altered from any source distribution.
+
+.SH SEE ALSO
+.B cc65(1),
+.B ca65(1)
