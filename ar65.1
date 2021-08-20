@@ -1,0 +1,107 @@
+.TH ar65 1 "August 2021" "0.1.0" "User Manuals"
+.SH NAME
+ar65 \- an archiver for objects files genrated by ca65
+.SH SYNOPSIS
+ar65 \fIOPERATION...\fR lib file|module ...
+.SH DESCRIPTION
+It allows archive creation, addition or removal of modules from archives, and to extract
+modules from existing archives.
+.SH OPERATIONS
+Supported operations:
+
+.IP \fBr\fR
+Add modules
+
+You may add modules to a library using the 'r' command ('a' is deprecated). If
+the library does not exist, it is created (and a warning message is printed
+which you may ignore if creation of the library was your intention). You may
+specify any number of modules on the command line following the library.
+
+If a module with the same name exists in the library, it is replaced by the new
+one. The archiver prints a warning, if the module in the library has a newer
+timestamp than the one to add.
+
+Here's an example:
+
+.in +1i
+ar65 r mysubs.lib sub1.o sub2.o
+.in
+
+This will add two modules to the library 'mysubs.lib' creating the library if
+necessary. If the library contains modules named sub1.o or sub2.o, they are
+replaced by the new ones.
+
+Modules names in the library are stored without the path, so, using
+
+.in +1i
+ar65 v v r mysubs.lib ofiles/sub1.o ofiles/sub2.o
+.in
+
+will verbose add two modules named 'sub1.o' and 'sub2.o' to the library.
+
+.IP \fBd\fR
+Delete modules
+
+Deleting modules from a library is done with the 'd' command. You may not give a
+path when naming the modules.
+
+Example:
+
+.in +1i
+ar65 d mysubs.lib sub1.o
+.in
+
+This will delete the module named 'sub1.o' from the library, printing an error
+if the library does not contain that module.
+
+.IP \fBt\fR
+List library table
+
+The 't' command prints a table of all modules in the library ('l' is
+deprecated). Any module names on the command line are ignored.
+
+Example:
+
+.in +1i
+ar65 tv mysubs.lib
+.in
+
+.IP \fBv\fR
+Increase verbosity (put before oether operation)
+
+.IP \fBx\fR
+Extract modules
+
+.IP \fBV\fR
+Print the archiver version
+
+Using the 'x' command, you may extract modules from the library. The modules
+named on the command line are extracted from the library and put into the
+current directory.
+
+\fINote\fR: Because of the indexing done by the archiver, the modules may have a
+changed binary layout, that is, a binary compare with the old module (before
+importing it into the library) may yield differences. The extracted modules are
+accepted by the linker and archiver, however, so this is not a problem.
+
+Example for extracting a module from the library:
+
+.in +1i
+ar65 x mysubs.lib sub1.o
+.in
+
+.P
+In addition to these operations, the archiver will check for, and warn about
+duplicate external symbols in the library, every time when an operation does
+update the library. This is only a warning, the linker will ignore one of the
+duplicate symbols (which one is unspecified).
+
+.SH AUTHOR
+Program Author: Ullrich von Bassewitz <webmaster@von-bassewitz.de>
+.br
+Manpage Author: Jake Grossman         <jake.r.grossman@gmail.com>
+
+.SH SEE ALSO
+.BR cc65(1),
+.BR ca65(1),
+.BR ar65(1)
