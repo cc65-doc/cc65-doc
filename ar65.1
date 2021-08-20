@@ -1,15 +1,18 @@
 .TH ar65 1 "August 2021" "0.1.0" "User Manuals"
 .SH NAME
 ar65 \- an archiver for objects files genrated by ca65
+
 .SH SYNOPSIS
-ar65 \fIOPERATION...\fR lib file|module ...
+ar65 \fIoperation...\fR \fIlib\fR \fIfile\fR|\fImodule\fR \fI...\fR
+
 .SH DESCRIPTION
-It allows archive creation, addition or removal of modules from archives, and to extract
+Utility to create archives, add or remove modules from archies, and extract
 modules from existing archives.
+
 .SH OPERATIONS
-Supported operations:
 
 .IP \fBr\fR
+.br
 Add modules
 
 You may add modules to a library using the 'r' command ('a' is deprecated). If
@@ -40,6 +43,7 @@ ar65 v v r mysubs.lib ofiles/sub1.o ofiles/sub2.o
 will verbose add two modules named 'sub1.o' and 'sub2.o' to the library.
 
 .IP \fBd\fR
+.br
 Delete modules
 
 Deleting modules from a library is done with the 'd' command. You may not give a
@@ -55,6 +59,7 @@ This will delete the module named 'sub1.o' from the library, printing an error
 if the library does not contain that module.
 
 .IP \fBt\fR
+.br
 List library table
 
 The 't' command prints a table of all modules in the library ('l' is
@@ -67,12 +72,15 @@ ar65 tv mysubs.lib
 .in
 
 .IP \fBv\fR
+.br
 Increase verbosity (put before oether operation)
 
 .IP \fBx\fR
+.br
 Extract modules
 
 .IP \fBV\fR
+.br
 Print the archiver version
 
 Using the 'x' command, you may extract modules from the library. The modules
@@ -101,7 +109,32 @@ Program Author: Ullrich von Bassewitz <webmaster@von-bassewitz.de>
 .br
 Manpage Author: Jake Grossman         <jake.r.grossman@gmail.com>
 
+.SH COPYRIGHT
+ar65 (and all cc65 binutils) are (C) Copyright 1998-2000 Ullrich von Bassewitz
+and others. For usage of the binaries and/or sources the following conditions do
+apply:
+
+This software is provided 'as-is', without any expressed or implied warranty. In
+no event will the authors be held liable for any damages arising from the use of
+this software.
+
+Permission is granted to anyone to use this software for any purpose, including
+commercial applications, and to alter it and redistribute it freely, subject to
+the following restrictions:
+
+.IP 1.
+The origin of this software must not be misrepresented; you must not claim that
+you wrote the original software. If you use this software in a product, an
+acknowledgment in the product documentation would be appreciated but is not
+required.
+
+.IP 2.
+Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original software.
+
+.IP 3.
+This notice may not be removed or altered from any source distribution.
+
 .SH SEE ALSO
 .BR cc65(1),
-.BR ca65(1),
-.BR ar65(1)
+.BR ca65(1)
