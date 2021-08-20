@@ -1,0 +1,42 @@
+.TH chrcvt65 1 "August 2021" "0.1.0" "User Manuals"
+.SH NAME
+chrcvt65 \- vector font converter
+
+.SH SYNOPSIS
+chrcvt65 [\fIoptions\fR] \fIfile\fR [\fIoptions\fR] [\fIfile\fR]
+
+.SH DESCRIPTION
+Convert BGI Stroked Font to a compact TGI native vector font.
+
+The converter will read one CHR file per invocation and write the font in TCH format to a new file.
+
+Example output for the command:
+
+.RS
+chrcvt65 --verbose LITT.CHR
+
+BGI Stroked Font V1.1 - Aug 12, 1991
+Copyright (c) 1987,1988 Borland International
+.RE
+
+.SH OPTIONS
+
+.TP
+.BR \-h ", " \-\-help
+Help (this text)
+
+.TP
+.BR \-v ", " \-\-verbose
+Be more verbose
+
+.TP
+.BR \-V ", " \-\-version
+Print the version number and exit
+
+.SH AUTHOR
+Program Author: Ullrich von Bassewitz <webmaster@von-bassewitz.de>
+.br
+Manpage Author: Jake Grossman         <jake.r.grossman@gmail.com>
+
+.SH SEE ALSO
+.BR cc65(1)
