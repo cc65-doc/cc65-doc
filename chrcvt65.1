@@ -4,7 +4,7 @@
 .Sh NAME
 .Nm chrcvt65
 .Nd vector font converter
-
+.Pp
 .Sh SYNOPSIS
 .Nm
 .Bk -words
@@ -12,13 +12,13 @@
 .Op Ar file
 .Op Ar options
 .Ek
-
+.Pp
 .Sh DESCRIPTION
 Convert BGI Stroked Font to a compact TGI native vector font.
-
+.Pp
 The converter will read one CHR file per invocation and write the font in TCH
 format to a new file.
-
+.Pp
 Example output for the command:
 .Bd -literal -offset indent
 chrcvt65 --verbose LITT.CHR
@@ -26,41 +26,39 @@ chrcvt65 --verbose LITT.CHR
 BGI Stroked Font V1.1 - Aug 12, 1991
 Copyright (c) 1987,1988 Borland International
 .Ed
-
+.Pp
 .Sh OPTIONS
-
+.Pp
 .Bl -tag -widht "XXXXXXXXXXXX"
 .It Fl h , Fl Fl help
 Print a short help summary.
-
 .It Fl v , Fl Fl verbose
 Be more verbose
-
 .It Fl V , Fl Fl version
 Print the version number and exit
-
+.Pp
 .El
-
+.Pp
 .Sh AUTHORS
 Program Author: Ullrich von Bassewitz <\fIwebmaster@von-bassewitz.de\fR>
 .br
 Manpage Author: Jake Grossman         <\fIjake.r.grossman@gmail.com\fR>
-
+.Pp
 .Sh COPYRIGHT
 chrcvt65 (C) Copyright 2009 Ullrich von Bassewitz For usage
 of the binaries and/or sources the following conditions do
 apply:
-
+.Pp
 This software is provided 'as-is', without any expressed or
 implied warranty. In no event will the authors be held
 liable for any damages arising from the use of this
 software.
-
+.Pp
 Permission is granted to anyone to use this software for any
 purpose, including commercial applications, and to alter it
 and redistribute it freely, subject to the following
 restrictions:
-
+.Pp
 .Bl -enum
 .It
 The origin of this software must not be misrepresented; you
@@ -68,16 +66,14 @@ must not claim that you wrote the original software. If you
 use this software in a product, an acknowledgment in the
 product documentation would be appreciated but is not
 required.
-
 .It
 Altered source versions must be plainly marked as such, and
 must not be misrepresented as being the original software.
-
 .It
 This notice may not be removed or altered from any source
 distribution.
-
+.Pp
 .El
-
+.Pp
 .Sh SEE ALSO
 .Xr cc65 1
