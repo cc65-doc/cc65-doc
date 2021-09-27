@@ -1,0 +1,5031 @@
+.Dd $Mdocdate$
+.Dt CA65 1 URM
+.Os 0.1.0
+.Sh NAME
+.Nm ca65
+.Nd a powerful macro assembler for the 6502, 65C02, and 65816 CPUs
+.Sh SYNOPSIS
+.Nm
+.Bk -words
+.Op Fl UVdghisv
+.Op Fl D Pf symbol Op Pf = Ar value
+.Op Fl I Ar dir
+.Op Fl Pf W Ar n
+.Op Fl l Ar filename
+.Op Fl mm Ar model
+.Op Fl o Ar filename
+.Op Fl t Ar system
+.Op Fl Fl bin-includ-dir Ar dir
+.Op Fl Fl cpu Ar type
+.Op Fl Fl create-dep Ar filename
+.Op Fl Fl create-full-dep Ar filename
+.Op Fl Fl feature Ar name
+.Op Fl Fl large-alignment
+.Op Fl Fl list-bytes Ar n
+.Op Fl Fl pagelength Ar n
+.Op Fl Fl relax-checks
+.Op Fl Fl smart
+.Op Ar file
+.Ek
+.Sh OPTIONS
+Mandatory arguments to long options are mandatory for short options, too.
+.Bl -tag -width "XXXXXXXXXXXX"
+.It Fl D Pf symbol Op Pf = Ar value
+Define a symbol
+.It Fl I , Fl Fl include-dir Ar dir
+Set an include directory search path
+.It Fl U , Fl Fl auto-import
+Mark unresolved symbols as import
+.It Fl V , Fl Fl version
+Print the assembler version
+.It Fl Pf W Ar n
+Set warning level n
+.It Fl d , Fl Fl debug
+Debug mode
+.It Fl g , Fl Fl debug-info
+Add debug info to object file
+.It Fl h , Fl Fl help
+Print help text
+.It Fl i , Fl Fl ignore-case
+Ignore case of symbols
+.It Fl l , Fl Fl listing Ar filename
+Create a listing file if assembly was ok
+.It Fl mm , Fl Fl memory-model Ar model
+Set the memory model
+.It Fl o Ar filename
+Name the output file
+.It Fl s , Fl Fl smart
+Enable smart mode
+.It Fl t , Fl Fl target Ar system
+Set the target system
+.It Fl v , Fl Fl verbose
+Increase verbosity
+.It Fl Fl bin-include-dir Ar dir
+Set a search path for binary includes
+.It Fl Fl cpu Ar type
+Set cpu type
+.It Fl Fl create-dep Ar filename
+Create a make dependency file
+.It Fl Fl create-full-dep Ar filename
+Create a full make dependency file
+.It Fl Fl feature Ar name
+Set an emulation feature
+.It Fl Fl large-alignment
+Don't warn about large alignments
+.It Fl Fl list-bytes Ar n
+Maximum number of bytes per listing line
+.It Fl Fl pagelength Ar n
+Set the page length for the listing
+.It Fl Fl relax-checks
+Relax some checks (see further details)
+.El
+.Sh DETAILED OPTIONS
+.Bl -tag -width "XXXXXXXXXXXX"
+.It Fl Fl bin-include-dir Ar dir
+Name a directory which is searched for binary include files.
+The option may be used more than once to specify more than
+one directory to search. The current directory is always
+searched first before considering any additional directories.
+.Pp
+See the section
+.Em SEARCH PATHS
+below.
+.It Fl Fl cpu Ar type
+Set the default for the CPU type. The option takes a
+parameter
+.Em type
+which may be one of:
+.Bl -dash -offset indent
+.It
+6502
+.It
+6502X
+.It
+6502DTV
+.It
+65SCO2 65816
+.It
+sweet16
+.It
+HuC6280
+.It
+4510
+.El
+.It Fl Fl create-dep Ar filename
+Tells the assembler to generate a file containing the
+dependency list for the assembled module in makefile syntax.
+The output is written to a file with the given name. The
+output does not include files passed via debug information
+to the assembler.
+.It Fl Fl create-full-dep Ar filename
+Tells the assembler to generate a file containing the
+dependency list for the assembled module in makefile syntax.
+The output is written to a file with the given name. The
+output does include files passed via debug information to
+the assembler.
+.It Fl d, Fl Fl debug
+Enables debug mode, something that should not be needed for
+mere mortals :)
+.It Fl Fl feature Ar name
+Enable an emulation feature. This is identical as using
+.Em .FEATURE
+in the source with two exceptions: Feature names must be
+lower case, and each feature must be specified using an
+extra
+.Em --feature
+option, comma separated lists are not allowed.
+.Pp
+See the discussion of the
+.Em .FEATURE
+command for a list of emulation features.
+.It Fl g, Fl Fl debug-info
+When the option is used, the assembler will add a section to
+the object file the contains all symbols (including local
+ones) together with the symbol values and the source file
+positions. The linker will put these additional symbols into
+the VICE label file, so even local symbols can be seen in
+the VICE monitor.
+.It Fl h, Fl Fl help
+Print a short option summary.
+.It Fl i, Fl Fl ignore-case
+This option makes the assembler case insensitive on
+identifiers and labels. This option will override the
+default, but may itself be overridden by the
+.Em .CASE
+control command.
+.It Fl l Ar filename, Fl Fl listing Ar filename
+Generate an assembler listing with the given name. A listing
+file will never be generated in case of assembly errors.
+.It Fl Fl large-alignment
+Disable warnings about a large combined alignment. See the
+discussion of the
+.Em .ALIGN
+directive for further information.
+.It Fl Fl list-bytes Ar n
+Set the maximum number of bytes printed in the listing for
+one line of input. See the
+.Em .LISTBYTES
+directive for more information. The value zero can be used
+to encode an unlimited number of printed bytes.
+.It Fl mm Ar model, Fl Fl memory-model Ar model
+Define the default memory model. Possible model specifiers
+are near, far, and huge.
+.It Fl o Ar filename
+The default output name is the name of the input file with
+the extension replaced by ".o". You may give another name
+with the
+as the source file, or, if
+.Em -o
+is given, the full path in this name is used.
+.It Fl Fl pagelength Ar n
+Sets the length of a listing page in lines. See the
+.Em .PAGELENGTH
+directive for more information.
+.It Fl Fl relax-checks
+Relax some checks done by the assembler. This will allow
+code that is an error in most cases and flagged as such by
+the assembler, but can be valid in special situations.
+.Pp
+Examples:
+.Bl -dash -offset indent
+.It
+Short branches between different segments
+.It
+Byte sized address loads where the address is not a zeropage address
+.El
+.It Fl s, Fl Fl smart-mode
+In smart mode the assembler will track usage of the
+.Em REP
+and
+.Em SEP
+instructions in 65816 mode and update the operand sizes
+accordingly. If the operand of such an instruction cannot be
+evaluated by the assembler (for example, because the operand
+is an imported symbol), a warning is issued.
+.Pp
+Since the assembler cannot trace the execution flow this may lead to
+false results in some cases. If in doubt, use the
+.Em .IXX
+and
+.Em .AXX
+instructions to tell the assembler about the current
+settings. Smart mode is off by default.
+.It Fl t Ar SYS, Fl Fl target Ar system
+Set the target system. This will enable translation of
+character strings and character constants into the character
+set of the target platform. The default for the target
+system is "none", which means that no translation will take
+place. The assembler supports the same target systems as the
+compiler, see there for a list.
+.Pp
+Depending on the target, the default CPU type is also set.
+This can be overriden by using the
+.Em --cpu
+option.
+.It Fl v, Fl Fl verbose
+Increase the assembler verbosity. Usually only needed for
+debugging purposes. You may use this option more than one
+time for even more verbose output.
+.It Fl D Pf symbol Op Pf = Ar value
+This option allows you to define symbols on the command
+line. Without a value, the symbol is defined with the value
+zero. When giving a value, you may use the '$' prefix for
+hexadecimal symbols. Please note that for some operating
+systems, '$' has a special meaning, so you may have to quote
+the expression.
+.It Fl I Ar dir, Fl Fl include-dir Ar dir
+Name a directory which is searched for include files. The
+option may be used more than once to specify more than one
+directory to search. The current directory is always
+searched first before considering any additional
+directories. See also the section about search paths.
+.It Fl U, Fl Fl auto-import
+Mark symbols that are not defined in the sources as imported
+symbols. This should be used with care since it delays error
+messages about typos and such until the linker is run. The
+compiler uses the equivalent of this switch
+.Em .AUTOIMPORT
+to enable auto imported symbols for the runtime library.
+However, the compiler is supposed to generate code that runs
+through the assembler without problems, something which is
+not always true for assembler programmers.
+.It Fl V, Fl Fl version
+Print the version number of the assembler. If you send any
+suggestions or bugfixes, please include the version number.
+.It Fl Pf W Ar n
+Set the warning level for the assembler. Using
+.Em -W2
+the assembler will even warn about such things like unused
+imported symbols. The default warning level is 1, and it
+would probably be silly to set it to something lower.
+.El
+.Sh SEARCH PATHS
+Normal include files are searched in the following places:
+.Bl -enum -offset indent
+.It
+The current file's directory.
+.It
+Any directory added with the -I option on the command line.
+.It
+The value of the environment variable CA65_INC if it is defined.
+.It
+A subdirectory named asminc of the directory defined in the environment variable CC65_HOME, if it is defined.
+.It
+An optionally compiled-in directory.
+.El
+.Pp
+Binary include files are searched in the following places:
+.Bl -enum -offset indent
+.It
+The current file's directory.
+.It
+Any directory added with the --bin-include-dir option on the command line.
+.El
+.Sh INPUT FORMAT
+.Ss Assembler Syntax
+The assembler accepts the standard 6502/65816 assembler
+syntax. One line may contain a label (which is identified by
+a colon), and, in addition to the label, an assembler
+mnemonic, a macro, or a control command (see section Control
+Commands for supported control commands). Alternatively, the
+line may contain a symbol definition using the '=' token.
+Everything after a semicolon is handled as a comment (that
+is, it is ignored).
+.Pp
+Here are some examples for valid input lines:
+.Bd -literal -offset indent
+Label:                          ; A label and a comment
+        lda     #$20            ; A 6502 instruction plus comment
+L1:     LDX     #$20            ; Same with label
+L2:     .BYTE   "Hello world"   ; Label plus control command
+        mymac   $20             ; Macro expansion
+        MySym = 3*L1            ; Symbol definition
+MaSym   = Label                 ; Another symbol
+.Ed
+.Pp
+The assembler accepts
+.Bl -dash -offset indent
+.It
+all valid 6502 mnemonics when in 6502 mode (the default or after the
+.Em .P02
+command was given).
+.It
+all valid 6502 mnemonics plus a set of illegal instructions when in 6502X mode.
+.It
+all valid 6502DTV mnemonics when in 6502DTV mode (after the
+.Em .PDTV
+command was given).
+.It
+all valid 65SC02 mnemonics when in 65SC02 mode (after the
+.Em .PSC02
+command was given).
+.It
+all valid 65C02 mnemonics when in 65C02 mode (after the
+.Em .PC02
+command was given).
+.It
+all valid 65816 mnemonics when in 65816 mode (after the
+.Em .P816
+command was given).
+.It
+all valid 4510 mnemonics when in 4510 mode (after the
+.Em .P4510
+command was given).
+.El
+.Ss 65816 Mode
+In 65816 mode, several aliases are accepted, in addition to the official mnemonics:
+.Bl -dash -offset indent
+.It
+CPA is an alias for CMP
+.It
+DEA is an alias for DEC A
+.It
+INA is an alias for INC A
+.It
+SWA is an alias for XBA
+.It
+TAD is an alias for TCD
+.It
+TAS is an alias for TCS
+.It
+TDA is an alias for TDC
+.It
+TSA is an alias for TSC
+.El
+.Ss 6502X Mode
+6502X mode is an extension to the normal 6502 mode. In this
+mode, several mnemonics for illegal instructions of the NMOS
+6502 CPUs are accepted. Since these instructions are
+illegal, there are no official mnemonics for them. The
+unofficial ones are taken from
+.Em http://www.oxyron.de/html/opcodes02.html Ns .
+Please note that only the ones marked as "stable" are
+supported. The following table uses information from the
+mentioned web page, for more information, see there.
+.Bd -literal -offset indent
+ALR: A     := (A and #{imm})/2;
+ANC: A     :=  A and #{imm}; Generates opcode $0B.
+ARR: A     := (A and #{imm})/2;
+AXS: X     :=  A and X-#{imm};
+DCP: {adr} := {adr}-1; A-{adr};
+ISC: {adr} := {adr}+1; A:=A-{adr};
+LAS: A,X,S := {adr} and S;
+LAX: A,X   := {adr};
+RLA: {adr} := {adr}rol; A:=A and {adr};
+RRA: {adr} := {adr}ror; A:=A adc {adr};
+SAX: {adr} :=  A and X;
+SLO: {adr} := {adr}*2; A:=A or {adr};
+SRE: {adr} := {adr}/2; A:=A xor {adr};
+.Ed
+.Ss 4510 Mode
+The 4510 is a microcontroller that is the core of the
+Commodore C65 aka C64DX. It contains among other functions a
+slightly modified 65CE02/4502 CPU, to allow address mapping
+for 20 bits of address space (1 megabyte addressable area).
+As compared to the description of the CPU in the C65 System
+Specification* uses these changes:
+.Bl -dash -offset indent
+.It
+LDA (d,SP),Y may also be written as LDA (d,S),Y
+(matching the 65816 notataion).
+.It
+All branch instruction allow now 16 bit offsets. To use a 16
+bit branch you have to prefix these with an "L" (e.g. "LBNE"
+instead of "BNE").  This might change at a later
+implementation of the assembler.
+.El
+.Pp
+.Pp
+For more information about the Commodore C65/C64DX and the
+4510 CPU, see zimmers.net** and Wikipedia***.
+.Pp
+.Pf *\  Em https://raw.githubusercontent.com/MEGA65/c65-specifications/master/c65manualupdated.txt/
+.Pf **\  Em http://www.zimmers.net/anonftp/pub/cbm/c65/
+.Pf ***\  Em https://en.wikipedia.org/wiki/Commodore_65/
+.Pp
+.Ss Sweet16 Mode
+SWEET 16 is an interpreter for a pseudo 16 bit CPU written
+by Steve Wozniak for the Apple ][ machines. It is available
+in the Apple ][ ROM. ca65 can generate code for this pseudo
+CPU when switched into sweet16 mode. The following is
+special in sweet16 mode:
+.Pp
+The '@' character denotes indirect addressing and is no
+longer available for cheap local labels. If you need cheap
+local labels, you will have to switch to another lead
+character using the
+.Em .LOCALCHAR
+command.
+Registers are specified using R0 .. R15. In sweet16
+mode, these identifiers are reserved words.
+.Pp
+Please note that the assembler does neither supply the
+interpreter needed for SWEET 16 code, nor the zero page
+locations needed for the SWEET 16 registers, nor does it
+call the interpreter. All this must be done by your program.
+Apple ][ programmers do probably know how to use sweet16
+mode.
+.Pp
+For more information about SWEET 16, see:
+.Pf *\  Em http://www.6502.org/source/interpreters/sweet16.htm?
+.Pp
+.Ss Number Format
+For literal values, the assembler accepts the widely used number formats:
+.Bl -tag -width "XXXXXXXXXXXX" -offset indent
+.It $2A
+Hex
+.It 2Ah
+Hex
+.It %00101010
+Binary
+.It 42
+Decimal
+.El
+.Pp
+A preceding '$' or a trailing 'h' denotes a hex value, a
+preceding '%' denotes a binary value, and a bare number is
+interpreted as a decimal. There are currently no octal
+values and no floats.
+.Pp
+.Ss Conditional Assembly
+Please note that when using the conditional directives 
+.Pf ( Em .IF
+and friends), the input must consist of valid assembler
+tokens, even in .IF branches that are not assembled.
+.Pp
+The
+reason for this behaviour is that the assembler must still
+be able to detect the ending tokens (like 
+.Em .ENDIF Ns ),
+so conversion of the input stream into tokens still takes
+place.
+.Pp
+As a consequence conditional assembly directives may
+not be used to prevent normal text (used as a comment or
+similar) from being assembled. 
+.Sh EXPRESSIONS
+.Ss Expression Evaluation
+All expressions are evaluated with (at least) 32 bit
+precision. An expression may contain constant values and any
+combination of internal and external symbols. Expressions
+that cannot be evaluated at assembly time are stored inside
+the object file for evaluation by the linker. Expressions
+referencing imported symbols must always be evaluated by the
+linker.
+.Ss Size of an expression result
+Sometimes, the assembler must know about the size of the
+value that is the result of an expression. This is usually
+the case, if a decision has to be made, to generate a zero
+page or an absolute memory references. In this case, the
+assembler has to make some assumptions about the result of
+an expression:
+.Bl -dash -offset ident
+.It
+If the result of an expression is constant, the actual value
+is checked to see if it's a byte sized expression or not.
+.It
+If the expression is explicitly casted to a byte sized
+expression by one of the '>', '<' or '^' operators, it is a
+byte expression.
+.It
+If this is not the case, and the expression contains a
+symbol, explicitly declared as zero page symbol (by one of
+the
+.Em .importzp
+or
+.Em .exportzp
+instructions), then the whole
+expression is assumed to be byte sized.
+.It
+If this is not the case, and the expression contains a
+If the expression contains symbols that are not defined, and
+these symbols are local symbols, the enclosing scopes are
+searched for a symbol with the same name. If one exists and
+this symbol is defined, its attributes are used to determine
+the result size.
+.It
+In all other cases the expression is assumed to be word
+sized.
+.El
+.Pp
+Note: If the assembler is not able to evaluate the
+expression at assembly time, the linker will evaluate it and
+check for range errors as soon as the result is known.
+.Ss Boolean Expressions
+In the context of a boolean expression, any non zero value
+is evaluated as true, any other value to false. The result
+of a boolean expression is 1 if it's true, and zero if it's
+false. There are boolean operators with extreme low
+precedence with version 2.x (where x > 0). The
+.Em .AND
+and
+.Em .OR
+operators are shortcut operators. That is, if the result of
+the expression is already known, after evaluating the left
+hand side, the right hand side is not evaluated.
+.Pp
+.Ss Constant Expressions
+Sometimes an expression must evaluate to a constant without
+looking at any further input. One such example is the
+.Em .IF
+command that decides if parts of the code are assembled or
+not. An expression used in the
+.Em .IF
+command cannot reference a symbol defined later, because the
+decision about the
+.Em .IF
+must be made at the point when it is read. If the expression
+used in such a context contains only constant numerical
+values, there is no problem. When unresolvable symbols are
+involved it may get harder for the assembler to determine if
+the expression is actually constant, and it is even possible
+to create expressions that aren't recognized as constant.
+Simplifying the expressions will often help.
+.Pp
+In cases where the result of the expression is not needed
+immediately, the assembler will delay evaluation until all
+input is read, at which point all symbols are known. So
+using arbitrary complex constant expressions is no problem
+in most cases.
+.Ss Available Operators
+.Bl -column -offset indent
+.It "Operator      " Ta "Description                " Ta Precedence
+.It ""
+.It "              " Ta "Built-in string functions  " Ta 0
+.It ""
+.It "              " Ta "Built-in pseudo-variables  " Ta 1
+.It "              " Ta "Built-in pseudo-functions  " Ta 1
+.It "+             " Ta "Unary positive             " Ta 1
+.It "-             " Ta "Unary negative             " Ta 1
+.It "^  .BITNOT    " Ta "Unary bitwise NOT          " Ta 1
+.It "^  .LOBYTE    " Ta "Unary low-byte operator    " Ta 1
+.It "^  .HIBYTE    " Ta "Unary high-byte operator   " Ta 1
+.It "^  .BANKBYTE  " Ta "Unary bank-byte operator   " Ta 1
+.It ""
+.It "*             " Ta "Multiplication             " Ta 2
+.It "/             " Ta "Divison                    " Ta 2
+.It "   .MOD       " Ta "Modulo operator            " Ta 2
+.It "&  .BITAND    " Ta "Bitwise AND                " Ta 2
+.It "^  .BITXOR    " Ta "Bitwise XOR                " Ta 2
+.It "<< .SHL       " Ta "Shift-left operator        " Ta 2
+.It ">> .SHR       " Ta "Shift-right operator       " Ta 2
+.It ""
+.It "+             " Ta "Binary addition            " Ta 3
+.It "-             " Ta "Binary subtraction         " Ta 3
+.It "|  .BITOR     " Ta "Bitwise OR                 " Ta 3
+.It ""
+.It "=             " Ta "Equal                      " Ta 4
+.It "<>            " Ta "Not Equal                  " Ta 4
+.It "<             " Ta "Less                       " Ta 4
+.It ">             " Ta "Greater                    " Ta 4
+.It "<=            " Ta "Less than or Equal         " Ta 4
+.It ">=            " Ta "Greater than or Equal      " Ta 4
+.It ""
+.It "&& .AND       " Ta "Boolean AND                " Ta 5
+.It "   .XOR       " Ta "Boolean XOR                " Ta 5
+.It ""
+.It "|| .OR        " Ta "Boolean OR                 " Ta 6
+.It ""
+.It "!  .AND       " Ta "Boolean NOT                " Ta 7
+.El
+.Pp
+To force a specific order of evaluation, parentheses may be used, as usual.
+.Sh SYMBOLS AND LABELS
+A symbol or label is an identifier that starts with a letter
+and is followed by letters and digits. Depending on some
+features enabled (see
+.Em at_in_identifiers Ns ,
+.Em dollar_in_identifiers Ns ,
+and
+.Em leading_dot_in_identifiers Ns )
+other characters may be present. Use of identifiers
+consisting of a single character will not work in all cases,
+because some of these identifiers are reserved keywords (for
+example "A" is not a valid identifier for a label, because
+it is the keyword for the accumulator).
+.Pp
+The assembler allows you to use symbols instead of naked
+values to make the source more readable. There are a lot of
+different ways to define and use symbols and labels, giving
+a lot of flexibility.
+.Ss Numeric constants
+Numeric constants are defined using the equal sign or the
+label assignment operator. After doing
+.Pp
+.Bd -literal -offset indent
+two = 2
+.Ed
+.Pp
+may use the symbol "two" in every place where a number is
+expected, and it is evaluated to the value 2 in this
+context. The label assignment operator is almost identical,
+but causes the symbol to be marked as a label, so it may be
+handled differently in a debugger:
+.Pp
+.Bd -literal -offset indent
+io := $d000
+.Ed
+.Pp
+The right side can of course be an expression:
+.Pp
+.Bd -literal -offset indent
+four = two * two
+.Ed
+.Pp
+.Ss Numeric variables
+Within macros and other control structures
+.No ( Em .REPEAT Ns ,
+\&...) it is sometimes useful to have some sort of variable.
+This can be achieved by the
+.Em .SET
+operator. It creates a
+symbol that may get assigned a different value later:
+.Bd -literal -offset indent
+four .SET 4
+lda     #four           ; Loads 4 into A
+four .SET 3
+lda     #four           ; Loads 3 into A
+.Ed
+.Pp
+Since the value of the symbol can change later, it must be
+possible to evaluate it when used (no delayed evaluation as
+with normal symbols). So the expression used as the value
+must be constant.
+.Pp
+Following is an example for a macro that generates a
+different label each time it is used. It uses the
+.Em .SPRINTF
+function and a numeric variable named lcount.
+.Bd -literal -offset indent
+\&.LCOUNT .SET 0          ; Initialize the counter
+
+\&.MACRO  genlab
+        .IDENT (.SPRINTF ("L%04X", lcount)):
+        lcount .SET lcount + 1
+\&.ENDMACRO
+.Ed
+.Pp
+.Ss Standard Labels
+A label is defined by writing the name of the label at the
+start of the line (before any instruction mnemonic, macro or
+pseudo directive), followed by a colon. This will declare a
+symbol with the given name and the value of the current
+program counter. Here is an example:
+.Bd -literal -offset indent
+Label:     LDX     #$20
+.Ed
+.Pp
+See the section
+.Em INPUT FORMAT
+for more examples.
+.Ss Local labels and symbols
+Using the
+.Em .PROC
+directive, it is possible to create regions of code where
+the names of labels and symbols are local to this region.
+They are not known outside of this region and cannot be
+accessed from there. Such regions may be nested like
+PROCEDUREs in Pascal.
+.Pp
+See the description of the
+.Em .PROC
+directive for more information.
+.Ss Cheap local labels
+Cheap local labels are defined like standard labels, but the
+name of the label must begin with a special symbol (usually
+\&'@', but this can be changed by the
+.Em .LOCALCHAR
+directive).
+.Pp
+Cheap local labels are visible only between two non cheap
+labels. As soon as a standard symbol is encountered (this
+may also be a local symbol if inside a region defined with
+the
+.Em .PROC
+directive), the cheap local symbol goes out of scope.
+.Pp
+You may use cheap local labels as an easy way to reuse
+common label names like "Loop". Here is an example:
+.Bd -literal -offset indent
+Clear:  lda    #$00             ; Global label
+        ldy    #$20
+@Loop:  sta    Mem,y            ; Local label
+        dey
+        bne    @Loop            ; Ok
+        rts
+Sub:    ...                     ; New global label
+        bne    @Loop            ; ERROR: Unknown identifier!
+.Ed
+.Pp
+.Ss Unnamed labels
+If you really want to write messy code, there are also
+unnamed labels. These labels do not have a name (you guessed
+that already, didn't you?). A colon is used to mark the
+absence of the name.
+.Pp
+Unnamed labels may be accessed by using the colon plus
+several minus or plus characters as a label designator.
+Using the '-' characters will create a back reference (use
+the n'th label backwards), using '+' will create a forward
+reference (use the n'th label in forward direction). An
+example will help to understand this:
+.Bd -literal -offset indent
+:       lda     (ptr1),y        ; #1
+        cmp     (ptr2),y
+        bne     :+              ; -> #2
+        tax
+        beq     :+++            ; -> #4
+        iny
+        bne     :-              ; -> #1
+        inc     ptr1+1
+        inc     ptr2+1
+        bne     :-              ; -> #1
+
+:       bcs     :+              ; #2 -> #3
+        ldx     #$FF
+        rts
+
+:       ldx     #$01            ; #3
+:       rts                     ; #4
+.Ed
+.Pp
+As you can see from the example, unnamed labels will make
+even short sections of code hard to understand, because you
+have to count labels to find branch targets. Nevertheless,
+unnamed labels are convenient in some situations, so it's
+your decision.
+.Pp
+Note: Scopes organize named symbols, not unnamed ones, so
+scopes don't have an effect on unnamed labels.
+.Ss Using macros to define labels and constants
+While there are drawbacks with this approach, it may be
+handy in a few rare situations. Using
+.Em .DEFINE Ns ,
+it is possible to define symbols or constants that may be
+used elsewhere. One of the advantages is that you can use it
+to define string constants (this is not possible with the
+other symbol types).
+.Pp
+Please note:
+.Em .DEFINE
+style macros do token replacements on a low level, so the
+names do not adhere to scoping, diagnostics may be
+misleading, there are no symbols to look up in the map file,
+and there is no debug info. Especially the first problem in
+the list can lead to very nasty programming errors. Because
+of these problems, the general advice is, do
+.Sy NOT
+use
+.Em .DEFINE
+if you don't have to.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.DEFINE two     2
+\&.DEFINE version "SOS V2.3"
+
+four = two * two        ; Ok
+\&.BYTE   version         ; Ok
+
+\&.PROC                   ; Start local scope
+two = 3                 ; Will give "2 = 3" - invalid!
+\&.ENDPROC
+.Ed
+.Pp
+.Sh SCOPES
+ca65 implements several sorts of scopes for symbols.
+.Ss Global scope
+All (non cheap local) symbols that are declared outside of any nested scopes are in global scope.
+.Ss Cheap locals
+A special scope is the scope for cheap local symbols. It
+lasts from one non local symbol to the next one, without any
+provisions made by the programmer. All other scopes differ
+in usage but use the same concept internally.
+.Ss Generic nested scopes
+A nested scoped for generic use is started with
+.Em .SCOPE
+and closed with
+.Em .ENDSCOPE Ns .
+The scope can have a name, in which case it is accessible
+from the outside by using explicit scopes. If the scope does
+not have a name, all symbols created within the scope are
+local to the scope, and aren't accessible from the outside.
+.Pp
+A nested scope can access symbols from the local or from
+enclosing scopes by name without using explicit scope names.
+In some cases there may be ambiguities, for example if there
+is a reference to a local symbol that is not yet defined,
+but a symbol with the same name exists in outer scopes:
+.Bd -literal -offset indent
+\&.SCOPE  outer
+       foo     = 2
+       .SCOPE  inner
+               lda     #foo
+               foo     = 3
+       .ENDSCOPE
+\&.ENDSCOPE
+.Ed
+.Pp
+In the example above, the lda instruction will load the
+value 3 into the accumulator, because foo is redefined in
+the scope. However:
+.Bd -literal -offset indent
+\&.SCOPE  outer
+        foo     = $1234
+        .SCOPE  inner
+                lda     foo,x
+                foo     = $12
+        .ENDSCOPE
+\&.ENDSCOPE
+.Ed
+.Pp
+Here, lda will still load from $12,x, but since it is
+unknown to the assembler that foo is a zeropage symbol when
+translating the instruction, absolute mode is used instead.
+In fact, the assembler will not use absolute mode by
+default, but it will search through the enclosing scopes for
+a symbol with the given name. If one is found, the address
+size of this symbol is used. This may lead to errors:
+.Bd -literal -offset indent
+\&.SCOPE  outer
+        foo     = $12
+        .SCOPE  inner
+                lda     foo,x
+                foo     = $1234
+        .ENDSCOPE
+\&.ENDSCOPE
+.Ed
+.Pp
+In this case, when the assembler sees the symbol foo in the
+lda instruction, it will search for an already defined
+symbol foo. It will find foo in scope outer, and a close
+look reveals that it is a zeropage symbol. So the assembler
+will use zeropage addressing mode. If foo is redefined later
+in scope inner, the assembler tries to change the address in
+the lda instruction already translated, but since the new
+value needs absolute addressing mode, this fails, and an
+error message "Range error" is output.
+.Pp
+Of course the most simple solution for the problem is to
+move the definition of foo in scope inner upwards, so it
+precedes its use. There may be rare cases when this cannot
+be done. In these cases, you can use one of the address size
+override operators:
+.Bd -literal -offset indent
+\&.SCOPE  outer
+        foo     = $12
+        .SCOPE  inner
+                lda     a:foo,x
+                foo     = $1234
+        .ENDSCOPE
+\&.ENDSCOPE
+.Ed
+.Pp
+This will cause the lda instruction to be translated using
+absolute addressing mode, which means changing the symbol
+reference later does not cause any errors.
+.Pp
+.Ss Nested procedures
+A nested procedure is created by use of
+.Em .PROC Ns .
+It differs from a
+.Em .SCOPE
+in that it must have a name, and a it will introduce a
+symbol with this name in the enclosing scope. So
+.Bd -literal -offset indent
+\&.PROC   foo
+        ...
+\&.ENDPROC
+.Ed
+.Pp
+is actually the same as
+.Bd -literal -offset indent
+foo:
+\&.SCOPE  foo
+       ...
+\&.ENDSCOPE
+.Ed
+.Pp
+This is the reason why a procedure must have a name. If you
+want a scope without a name, use
+.Em .SCOPE Ns .
+.Pp
+Note: As you can see from the example above, scopes and
+symbols live in different namespaces. There can be a symbol
+named foo and a scope named foo without any conflicts (but
+see the section titled "Scope search order").
+.Pp
+.Ss Structs, unions and enums
+Structs, unions and enums are explained in a separate
+section,
+.Em STRUCTS AND UNIONS Ns .
+.Pp
+They are only covered here because if they are declared with
+a name, they open a nested scope, similar to
+.Em .SCOPE Ns .
+However, when no name is specified, the behaviour is
+different: In this case, no new scope will be opened,
+symbols declared within a struct, union, or enum declaration
+will then be added to the enclosing scope instead.
+.Pp
+.Ss Explicit scope specification
+Accessing symbols from other scopes is possible by using an
+explicit scope specification, provided that the scope where
+the symbol lives in has a name. The namespace token (::) is
+used to access other scopes:
+.Bd -literal -offset indent
+\&.SCOPE  foo
+bar:    .word   0
+\&.ENDSCOPE
+
+        ...
+        lda     foo::bar        ; Access foo in scope bar
+.Ed        
+.Pp
+The only way to deny access to a scope from the outside is
+to declare a scope without a name (using the
+.Em .SCOPE
+command).
+.Pp
+A special syntax is used to specify the global scope: If a
+symbol or scope is preceded by the namespace token, the
+global scope is searched:
+.Bd -literal -offset indent
+bar     = 3
+
+\&.SCOPE  foo
+        bar     = 2
+        lda     #::bar  ; Access the global bar (which is 3)
+\&.ENDSCOPE
+.Ed
+.Pp
+.Ss Scope search order
+The assembler searches for a scope in a similar way as for a
+symbol. First, it looks in the current scope, and then it
+walks up the enclosing scopes until the scope is found.
+.Pp
+However, one important thing to note when using explicit
+scope syntax is, that a symbol may be accessed before it is
+defined, but a scope may not be used without a preceding
+definition. This means that in the following example:
+.Bd -literal -offset indent
+\&.SCOPE  foo
+        bar     = 3
+\&.ENDSCOPE
+
+\&.SCOPE  outer
+        lda     #foo::bar  ; Will load 3, not 2!
+        .SCOPE  foo
+                bar     = 2
+        .ENDSCOPE
+\&.ENDSCOPE
+.Ed
+.Pp
+the reference to the scope foo will use the global scope,
+and not the local one, because the local one is not visible
+at the point where it is referenced.
+.Pp
+Things get more complex if a complete chain of scopes is specified:
+.Bd -literal -offset indent
+\&.SCOPE  foo
+        .SCOPE  outer
+                .SCOPE  inner
+                        bar = 1
+                .ENDSCOPE
+        .ENDSCOPE
+        .SCOPE  another
+                .SCOPE  nested
+                        lda     #outer::inner::bar      ; 1
+                .ENDSCOPE
+        .ENDSCOPE
+\&.ENDSCOPE
+
+\&.SCOPE  outer
+        .SCOPE  inner
+                bar = 2
+        .ENDSCOPE
+\&.ENDSCOPE
+.Ed
+.Pp
+When outer::inner::bar is referenced in the lda instruction,
+the assembler will first search in the local scope for a
+scope named outer. Since none is found, the enclosing scope
+(another) is checked. There is still no scope named outer,
+so scope foo is checked, and finally scope outer is found.
+Within this scope, inner is searched, and in this scope, the
+assembler looks for a symbol named bar.
+.Pp
+Please note that once the anchor scope is found, all
+following scopes (inner in this case) are expected to be
+found exactly in this scope. The assembler will search the
+scope tree only for the first scope (if it is not anchored
+in the root scope). Starting from there on, there is no
+flexibility, so if the scope named outer found by the
+assembler does not contain a scope named inner, this would
+be an error, even if such a pair does exist (one level up in
+global scope).
+.Pp
+Ambiguities that may be introduced by this search algorithm
+may be removed by anchoring the scope specification in the
+global scope. In the example above, if you want to access
+the "other" symbol bar, you would have to write:
+.Bd -literal -offset indent
+\&.SCOPE  foo
+        .SCOPE  outer
+                .SCOPE  inner
+                        bar = 1
+                .ENDSCOPE
+        .ENDSCOPE
+        .SCOPE  another
+                .SCOPE  nested
+                        lda     #::outer::inner::bar    ; 2
+                .ENDSCOPE
+        .ENDSCOPE
+\&.ENDSCOPE
+
+\&.SCOPE  outer
+        .SCOPE  inner
+                bar = 2
+        .ENDSCOPE
+\&.ENDSCOPE
+.Ed
+.Pp
+.Sh ADDRESS SIZES AND MEMORY MODELS
+ca65 assigns each segment and each symbol an address size.
+This is true, even if the symbol is not used as an address.
+You may also think of a value range of the symbol instead of
+an address size.
+.Pp
+Possible address sizes are:
+.Bl -dash -offset indent
+.It
+Zeropage or direct (8 bits)
+.It
+Absolute (16 bits)
+.It
+Far (24 bits)
+.It
+Long (32 bits)
+.El
+.Pp
+Since the assembler uses default address sizes for the
+segments and symbols, it is usually not necessary to
+override the default behaviour. In cases, where it is
+necessary, the following keywords may be used to specify
+address sizes:
+.Bl -dash -offset indent
+.It
+DIRECT, ZEROPAGE or ZP for zeropage addressing (8 bits).
+.It
+ABSOLUTE, ABS or NEAR for absolute addressing (16 bits).
+.It
+FAR for far addressing (24 bits).
+.It
+LONG or DWORD for long addressing (32 bits).
+.El
+.Pp
+.Ss Address sizes of segments
+The assembler assigns an address size to each segment. Since
+the representation of a label within this segment is
+"segment start + offset", labels will inherit the address
+size of the segment they are declared in.
+.Pp
+The address size of a segment may be changed, by using an
+optional address size modifier. See the 
+.Em .SEGMENT
+directive for an explanation on how this is done.
+.Pp
+.Ss Address sizes of symbols
+The address size of a symbol can be specified with a prefix:
+.Bl -tag -offset indent
+.It z
+zeropage addressing (8 bits).
+.It a
+absolute addressing (16 bits).
+.It f
+far addressing (24 bits).
+.El
+.Pp
+The zeropage addressing override can be used to ensure the
+use of optimal zeropage instructions, or correct cases where
+the size isn't yet known due to the single-pass assembly
+model.
+.Pp
+The larger addressing overrides can be used to promote a
+smaller address to absolute or far addressing, instead of
+being automatically fit into a smaller addressing type.
+.Pp
+.Ss Memory models
+The default address size of a segment depends on the memory
+model used. Since labels inherit the address size from the
+segment they are declared in, changing the memory model is
+an easy way to change the address size of many symbols at
+once.
+.Pp
+.Sh PSEUDO VARIABLES
+.Bl -tag -width "XXXXXXXXXXXX"
+.It Em *
+Reading this pseudo variable will return the program counter
+at the start of the current input line.
+.Pp
+Assignment to this variable is possible when
+.Em .FEATURE
+pc_assignment is used. Note: You should not use assignments
+to *, use
+.Em .ORG
+instead.
+.It Em .ASIZE
+Reading this pseudo variable will return the current size of
+the Accumulator in bits.
+.Pp
+For the 65816 instruction set
+.Em .ASIZE
+will return either 8 or 16, depending on the current size of
+the operand in immediate accu addressing mode.
+.Pp
+For all other CPU instruction sets,
+.Em .ASIZE
+will always return 8.
+.Pp
+Example:
+.Bd -literal -offset indent
+; Reverse Subtract with Accumulator
+; A = memory - A
+\&.MACRO rsb param
+        .IF .ASIZE = 8
+                eor     #$ff
+        .ELSE
+                eor     #$ffff
+        .ENDIF
+        sec
+        adc     param
+\&.ENDMACRO
+.Ed
+.Pp
+See also:
+.Em .ISIZE
+.Pp
+.It Em .CPU
+Reading this pseudo variable will give a constant integer
+value that tells which CPU is currently enabled. It can also
+tell which instruction set the CPU is able to translate. The
+value read from the pseudo variable should be further
+examined by using one of the constants defined by the "cpu"
+macro package (see
+.Em .MACPACK Ns ).
+.Pp
+It may be used to replace the
+.Em .IFPxx
+pseudo instructions or to construct even more complex expressions.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACPACK        cpu
+\&.IF     (.CPU .BITAND CPU_ISET_65816)
+        phx
+        phy
+\&.ELSE
+        txa
+        pha
+        tya
+        pha
+\&.ENDIF
+.Ed
+.Pp
+.It Em .ISIZE
+Reading this pseudo variable will return the current size of
+the Index register in bits.
+.Pp
+For the 65816 instruction set
+.Em .ISIZE
+will return either 8 or 16, depending on the current size of
+the operand in immediate index addressing mode.
+.Pp
+For all other CPU instruction sets,
+.Em .ISIZE
+will always return 8.
+.Pp
+See also:
+.Em .ASIZE
+.It Em .PARAMCOUNT
+This builtin pseudo variable is only available in macros. It
+is replaced by the actual number of parameters that were
+given in the macro invocation.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACRO  foo     arg1, arg2, arg3
+\&.IF     .PARAMCOUNT <> 3
+\&.ERROR  "Too few parameters for macro foo"
+\&.ENDIF
+\&...
+\&.ENDMACRO
+.Ed
+See section
+.Em Macros Ns .
+.It Em .TIME
+Reading this pseudo variable will give a constant integer
+value that represents the current time in POSIX standard (as
+seconds since the Epoch).
+.Pp
+It may be used to encode the time of translation somewhere in the created code.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.DWORD  .TIME   ; Place time here
+.Ed
+.Pp   
+.It Em .VERSION
+Reading this pseudo variable will give the assembler version
+according to the following formula:
+.Bd -literal -offset indent
+VER_MAJOR*$100 + VER_MINOR*$10
+.Ed
+.Pp
+It may be used to encode the assembler version or check the
+assembler for special features not available with older
+versions.
+.Pp
+Example:
+.Pp
+Version 2.14 of the assembler will return $2E0 as numerical
+constant when reading the pseudo variable
+.Em .VERSION Ns .
+.El
+.Pp
+.Sh PSEUDO FUNCTIONS
+.Bl -tag -width "XXXXXXXXXXXX"
+.It Em .ADDRSIZE
+The
+.Em .ADDRSIZE
+function is used to return the internal address size
+associated with a symbol. This can be helpful in macros when
+knowing the address size of a symbol can help with custom
+instructions.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACRO myLDA foo
+        .IF .ADDRSIZE(foo) = 1
+                ;do custom command based
+                ; on zeropage addressing:
+                .BYTE 0A5h, foo
+        .ELSEIF .ADDRSIZE(foo) = 2
+                ;do custom command based
+                ; on absolute addressing:
+                .BYTE 0ADh
+                .WORD foo
+        .ELSEIF .ADDRSIZE(foo) = 0
+                ; no address size defined
+                ; for this symbol:
+                .OUT
+                .SPRINTF("Address size unknown for symbol %s", .STRING(foo))
+        .ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+This command is new and must be enabled with the
+.Em .FEATURE
+addrsize command.
+.Pp
+See:
+.Em .FEATURE
+.It Em .BANK
+The
+.Em .BANK
+function is used to support systems with banked
+memory. The argument is an expression with exactly one
+segment reference -- usually a label. The function result is
+the value of the bank attribute assigned to the run memory
+area of the segment. Please see the linker documentation for
+more information about memory areas and their attributes.
+.Pp
+The value of
+.Em .BANK
+can be used to switch memory so that a memory bank
+containing specific data is available.
+.Pp
+The bank attribute is a 32-bit integer, and so is the result of the
+.Em .BANK
+function. You will have to use
+.Em .LOBYTE
+or similar functions to address just part of it.
+.Pp
+Please note that
+.Em .BANK
+always will get evaluated in the link
+stage, so an expression containing
+.Em .BANK
+never can be used where a constant, known result is expected
+(for example, with
+.EM .RES Ns ).
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.SEGMENT "BANK1"
+\&.PROC   banked_func_1
+        ...
+\&.ENDPROC
+
+\&.SEGMENT "BANK2"
+\&.PROC   banked_func_2
+        ...
+\&.ENDPROC
+
+\&.PROC   bank_table
+        .ADDR   banked_func_1
+        .BYTE   <.BANK (banked_func_1)
+
+        .ADDR   banked_func_2
+        .BYTE   <.BANK (banked_func_2)
+\&.ENDPROC
+.Ed
+.Pp
+.It Em .BANKBYTE
+The function returns the bank byte (that is, bits 16-23) of
+its argument. It works identical to the '^' operator.
+.Pp
+See:
+.Em .HIBYTE Ns ,
+.Em .LOBYTE
+.Pp
+.It Em .BLANK
+Builtin function. The function evaluates its argument in
+parentheses and yields "false" if the argument is non blank
+(there is an argument), and "true" if there is no argument.
+The token list that makes up the function argument may
+optionally be enclosed in curly braces. This allows the
+inclusion of tokens that would otherwise terminate the list
+(the closing right parenthesis). The curly braces are not
+considered part of the list, a list just consisting of curly
+braces is considered to be empty.
+.Pp
+As an example, the
+.Em .IFBLANK
+statement may be replaced by
+.Bd -literal -offset indent
+\&.IF     .BLANK({arg})
+.Ed
+.Pp
+.It Em .CONCAT
+Builtin string function. The function allows to concatenate
+a list of string constants separated by commas. The result
+is a string constant that is the concatenation of all
+arguments. This function is most useful in macros and when
+used together with the
+.Em .STRING
+builtin function. The function may be used in any case where
+a string constant is expected.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.INCLUDE        .CONCAT ("myheader", ".", "inc")
+.Ed
+.Pp
+This is the same as the command
+.Bd -literal -offset indent
+\&.INCLUDE        "myheader.inc"
+.Ed
+.Pp
+.It Em .CONST
+Builtin function. The function evaluates its argument in
+parentheses and yields "true" if the argument is a constant
+expression (that is, an expression that yields a constant
+value at assembly time) and "false" otherwise. As an
+example, the
+.Em .IFCONST
+statement may be replaced by
+.Bd -literal -offset indent
+\&.IF     .CONST(a + 3)
+.Ed
+.Pp
+.It Em .DEF Ns , Em .DEFINED
+Builtin function. The function expects an identifier as
+argument in parentheses. The argument is evaluated, and the
+function yields "true" if the identifier is a symbol that
+already is defined somewhere in the source file up to the
+current position. Otherwise, the function yields false. As
+an example, the
+.Em .IFDEF
+statement may be replaced by
+.Bd -literal -offset indent
+\&.IF     .DEFINED(a)
+.Ed
+.Pp
+.It Em .DEFINEDMACRO
+Builtin function. The function expects an identifier as
+argument in parentheses. The argument is evaluated, and the
+function yields "true" if the identifier already has been
+defined as the name of a macro. Otherwise, the function
+yields false. Example:
+.Bd -literal -offset indent
+\&.MACRO add foo
+        clc
+        adc foo
+\&.ENDMACRO
+
+\&.IF     .DEFINEDMACRO(add)
+        add #$01
+\&.ELSE
+        clc
+        adc #$01
+\&.endif
+.Ed
+.Pp
+.It Em .HIBYTE
+The function returns the high byte (that is, bits 8-15) of
+its argument. It works identical to the '>' operator.
+.Pp
+See:
+.Em .LOBYTE Ns ,
+.Em .BANKBYTE
+.It Em .HIWORD
+The function returns the high word (that is, bits 16-31) of
+its argument.
+.Pp
+See:
+.Em .LOWORD
+.It Em .IDENT
+The function expects a string as its argument, and converts
+this argument into an identifier. If the string starts with
+the current
+.Em .LOCALCHAR Ns ,
+it will be converted into a cheap
+local identifier, otherwise it will be converted into a
+normal identifier.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACRO  makelabel       arg1, arg2
+        .IDENT (.CONCAT (arg1, arg2)):
+\&.ENDMACRO
+
+        makelabel       "foo", "bar"
+
+        .WORD           foobar          ; Valid label
+.Ed
+.Pp
+.It Em .ISMNEM Ns , Em .ISMNEMONIC
+Builtin function. The function expects an identifier as
+argument in parentheses. The argument is evaluated, and the
+function yields "true" if the identifier is defined as an
+instruction mnemonic that is recognized by the assembler.
+Example:
+.Bd -literal -offset indent
+\&.IF     .NOT .ISMNEMONIC(ina)
+        .MACRO ina
+                clc
+                adc #$01
+        .ENDMACRO
+\&.ENDIF
+.Ed
+.Pp
+.It Em .LEFT
+Builtin function. Extracts the left part of a given token
+list.
+.Pp
+Syntax:
+.Bd -literal -offset indent
+\&.LEFT (<int expr>, <token list>)
+.Ed
+.Pp
+The first integer expression gives the number of tokens to
+extract from the token list. The second argument is the
+token list itself. The token list may optionally be enclosed
+into curly braces. This allows the inclusion of tokens that
+would otherwise terminate the list (the closing right paren
+in the given case).
+.Pp
+Example:
+.Pp
+To check in a macro if the given argument has a '#' as first
+token (immediate addressing mode), use something like this:
+.Bd -literal -offset indent
+\&.MACRO  ldax    arg
+        ...
+        .IF (.MATCH (.LEFT (1, {arg}), #))
+
+        ; ldax called with immediate operand
+        ...
+
+        .ENDIF
+        ...
+\&.ENDMACRO
+.Ed
+.Pp
+See also the
+.Em .MID
+and
+.Em .RIGHT
+builtin functions.
+.It Em .LOBYTE
+The function returns the low byte (that is, bits 0-7) of its
+argument. It works identical to the '<' operator.
+.Pp
+See:
+.Em .HIBYTE Ns ,
+.Em .BANKBYTE
+.Pp
+.It Em .LOWORD
+The function returns the low word (that is, bits 0-15) of
+its argument.
+.Pp
+See:
+.Em .HIWORD
+.Pp
+.It Em .MATCH
+Builtin function. Matches two token lists against each
+other. This is most useful within macros, since macros are
+not stored as strings, but as lists of tokens.
+.Pp
+The syntax is
+.Bd -literal -offset indent
+\&.MATCH(<token list #1>, <token list #2>)
+.Ed
+.Pp
+Both token list may contain arbitrary tokens with the
+exception of the terminator token (comma resp. right
+parenthesis) and
+.Bl -dash -offset indent
+.It
+end-of-line
+.It
+end-of-file
+.El
+.Pp
+The token lists may optionally be enclosed into curly
+braces. This allows the inclusion of tokens that would
+otherwise terminate the list (the closing right paren in the
+given case). Often a macro parameter is used for any of the
+token lists.
+.Pp
+Please note that the function does only compare tokens, not
+token attributes. So any number is equal to any other
+number, regardless of the actual value. The same is true for
+strings. If you need to compare tokens and token attributes,
+use the
+.Em .XMATCH
+function.
+.Pp
+Example:
+.Pp
+Assume the macro ASR, that will shift right the accumulator
+by one, while honoring the sign bit. The builtin processor
+instructions will allow an optional "A" for accu addressing
+for instructions like ROL and ROR. We will use the
+.Em .MATCH
+function to check for this and print and error for invalid
+calls.
+.Bd -literal -offset indent
+\&.MACRO  asr     arg
+
+        .IF (.NOT .BLANK(arg)) .AND (.NOT .MATCH ({arg}, a))
+        .ERROR "Syntax error"
+        .ENDIF
+
+        cmp     #$80            ; Bit 7 into carry
+        lsr     a               ; Shift carry into bit 7
+
+\&.ENDMACRO
+.Ed
+.Pp
+The macro will only accept no arguments, or one argument
+that must be the reserved keyword "A".
+.Pp
+See:
+.Em .XMATCH
+.It Em .MAX
+Builtin function. The result is the larger of two values.
+.Pp
+The syntax is
+.Bd -literal -offset indent
+\&.MAX (<value #1>, <value #2>)
+.Ed
+.Pp
+Example:
+.Bd -literal -offset indent
+; Reserve space for the larger of two data blocks
+savearea:       .RES .MAX (.SIZEOF (foo), .SIZEOF (bar))
+.Ed
+.Pp
+See:
+.Em .MIN
+.Pp
+.It Em .MID
+Builtin function. Takes a starting index, a count and a
+token list as arguments. Will return part of the token list.
+.Pp
+Syntax:
+.Bd -literal -offset indent
+\&.MID (<int expr>, <int expr>, <token list>)
+.Ed
+.Pp
+The first integer expression gives the starting token in the
+list (the first token has index 0). The second integer
+expression gives the number of tokens to extract from the
+token list. The third argument is the token list itself. The
+token list may optionally be enclosed into curly braces.
+This allows the inclusion of tokens that would otherwise
+terminate the list (the closing right paren in the given
+case).
+.Pp
+Example:
+.Pp
+To check in a macro if the given argument has a '#' as first
+token (immediate addressing mode), use something like this:
+.Bd -literal -offset indent
+\&.MACRO  ldax    arg
+        ...
+        .IF (.MATCH (.MID (0, 1, {arg}), #))
+
+        ; ldax called with immediate operand
+        ...
+
+        .ENDIF
+        ...
+\&.ENDMACRO
+.Ed
+.Pp
+Se also the
+.Em .LEFT
+and
+.Em .RIGHT
+builtin functions.
+.Pp
+.It Em .MIN
+Builtin function. The result is the smaller of two values.
+.Pp
+The syntax is
+.Bd -literal -offset indent
+\&.MIN (<value #1>, <value #2>)
+.Ed
+.Pp
+Example:
+.Bd -literal -offset indent
+; Reserve space for some data, but 256 bytes maximum
+savearea:       .RES .MIN (.SIZEOF (foo), 256)
+.Ed
+.Pp
+See:
+.Em .MAX
+.Pp
+.It Em .REF Ns , Em .REFERENCED
+Builtin function. The function expects an identifier as
+argument in parentheses. The argument is evaluated, and the
+function yields "true" if the identifier is a symbol that
+has already been referenced somewhere in the source file up
+to the current position. Otherwise the function yields
+false. As an example, the
+.Em .IFREF
+statement may be replaced
+by
+.Bd -literal -offset indent
+\&.IF     .REFERENCED(a)
+.Ed
+.Pp
+See:
+.Em .DEFINED
+.Pp
+.It Em .RIGHT
+Builtin function. Extracts the right part of a given token
+list.
+.Pp
+Syntax:
+.Bd -literal -offset indent
+\&.RIGHT (<int expr>, <token list>)
+.Ed
+.Pp
+The first integer expression gives the number of tokens to
+extract from the token list. The second argument is the
+token list itself. The token list may optionally be enclosed
+into curly braces. This allows the inclusion of tokens that
+would otherwise terminate the list (the closing right paren
+in the given case).
+.Pp
+See also the
+.Em .LEFT
+and
+.Em .MID
+builtin functions.
+.It Em .SIZEOF
+Returns the size of its argument. The argument can be a
+struct/union, a struct member, a scope/procedure, or a
+label. In the case of a procedure or label, its size is
+defined by the amount of data placed in the segment where
+the label is relative to. If a line of code switches
+segments (for example, in a macro), data placed in other
+segments does not count for the size.
+.Pp
+Please note that a symbol or scope must exist before it can
+be used together with
+.Em .SIZEOF()
+(that may get relaxed later, but always will be true for
+scopes). A scope has preference over a symbol with the same
+name; so, if the last part of a name represents both a scope
+and a symbol, then the scope is chosen over the symbol.
+.Pp
+After the following code:
+.Bd -literal -offset indent
+\&.STRUCT Point                   ; Struct size = 4
+        xcoord  .WORD
+        ycoord  .WORD
+\&.ENDSTRUCT
+
+P:      .TAG    Point           ; Declare a point
+@P:     .TAG    Point           ; Declare another point
+
+\&.CODE
+\&.PROC   Code
+        nop
+        .PROC   Inner
+                nop
+        .ENDPROC
+        nop
+\&.ENDPROC
+
+\&.PROC   Data
+\&.DATA                           ; Segment switch!!!
+        .RES    4
+\&.ENDPROC
+.Ed
+.Pp
+.Bl -tag -width ""
+.It .sizeof(Point)
+will have the value 4, because this is the size of struct
+Point.
+.It .sizeof(Point::xcoord)
+will have the value 2, because this is the size of the
+member xcoord in struct Point.
+.It .sizeof(P)
+will have the value 4, this is the size of the data declared
+on the same source line as the label P, which is in the same
+segment that P is relative to.
+.It .sizeof(@P)
+will have the value 4, see above. The example demonstrates
+that
+.Em .SIZEOF
+does also work for cheap local symbols.
+.It .sizeof(Code)
+will have the value 3, since this is amount of data emitted
+into the code segment, the segment that was active when Code
+was entered. Note that this value includes the amount of
+data emitted in child scopes (in this case Code::Inner).
+.It .sizeof(Code::Inner)
+will have the value 1 as expected.
+.It .sizeof(Data)
+will have the value 0. Data is emitted within the scope
+Data, but since the segment is switched after entry, this
+data is emitted into another segment.
+.El
+.Pp
+.It Em .SPRINTF
+Builtin function. It expects a format string as first
+argument. The number and type of the following arguments
+depend on the format string. The format string is similar to
+the one of the C printf function. Missing things are: Length
+modifiers, variable width.
+.Pp
+The result of the function is a string.
+.Pp
+Example:
+.Bd -literal -offset indent
+num     = 3
+
+; Generate an identifier:
+\&.IDENT (.SPRINTF ("%s%03d", "label", num)):
+.Ed
+.Pp
+.It Em .STRAT
+Builtin function. The function accepts a string and an index
+as arguments and returns the value of the character at the
+given position as an integer value. The index is zero based.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACRO  M       Arg
+        ; Check if the argument string starts with '#'
+        .IF (.STRAT (Arg, 0) = '#')
+        ...
+        .ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+.It Em .STRING
+Builtin function. The function accepts an argument in
+parentheses and converts this argument into a string
+constant. The argument may be an identifier, or a constant
+numeric value.
+.Pp
+Since you can use a string in the first place, the use of
+the function may not be obvious. However, it is useful in
+macros, or more complex setups.
+.Pp
+Example:
+.Bd -literal -offset indent
+; Emulate other assemblers:
+\&.MACRO  section name
+        .SEGMENT        .STRING(name)
+\&.ENDMACRO
+.Ed
+.Pp
+.It Em .STRLEN
+Builtin function. The function accepts a string argument in
+parentheses and evaluates to the length of the string.
+.Pp
+Example:
+.Pp
+The following macro encodes a string as a pascal style
+string with a leading length byte.
+.Bd -literal -offset indent
+\&.MACRO  PString Arg
+        .BYTE   .STRLEN(Arg), Arg
+\&.ENDMACRO
+.Ed
+.Pp
+.It Em .TCOUNT
+Builtin function. The function accepts a token list in
+parentheses. The function result is the number of tokens
+given as argument. The token list may optionally be enclosed
+into curly braces which are not considered part of the list
+and not counted. Enclosement in curly braces allows the
+inclusion of tokens that would otherwise terminate the list
+(the closing right paren in the given case).
+.Pp
+Example:
+.Pp
+The ldax macro accepts the '#' token to denote immediate
+addressing (as with the normal 6502 instructions). To
+translate it into two separate 8 bit load instructions, the
+\&'#' token has to get stripped from the argument:
+.Bd -literal -offset indent
+\&.MACRO  ldax    arg
+        .if (.match (.mid (0, 1, {arg}), #))
+        ; ldax called with immediate operand
+        lda     #<(.RIGHT (.TCOUNT ({arg})-1, {arg}))
+        ldx     #>(.RIGHT (.TCOUNT ({arg})-1, {arg}))
+        .ELSE
+        ...
+        .ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+.It Em .XMATCH
+Builtin function. Matches two token lists against each
+other. This is most useful within macros, since macros are
+not stored as strings, but as lists of tokens.
+.Pp
+The syntax is
+.Bd -literal -offset indent
+\&.XMATCH(<token list #1>, <token list #2>)
+.Ed
+.Pp
+Both token list may contain arbitrary tokens with the exception of the terminator token (comma resp. right parenthesis) and
+.Pp
+.Bl -dash -offset indent
+.It
+end-of-line
+.It
+end-of-file
+.El
+.Pp
+The token lists may optionally be enclosed into curly
+braces. This allows the inclusion of tokens that would
+otherwise terminate the list (the closing right paren in the
+given case). Often a macro parameter is used for any of the
+token lists.
+.Pp
+The function compares tokens and token values. If you need a
+function that just compares the type of tokens, have a look
+at the
+.Em .MATCH
+function.
+.Pp
+See:
+.Em .MATCH
+.El
+.Pp
+.Sh CONTROL COMMANDS
+.Bl -tag -width "XXXXXXXXXXXX"
+.It Em .A16
+Valid only in 65816 mode. Switch the accumulator to 16 bit.
+.Pp
+Note: this command will not emit any code, it will tell the
+assembler to create 16 bit operands for immediate
+accumulator addressing mode.
+.Pp
+See the
+.Em .SMART
+control command.
+.It Em .A8
+Valid only in 65816 mode. Switch the accumulator to 8 bit.
+.Pp
+Note: this command will not emit any code, it will tell the
+assembler to create 8 bit operands for immediate accumulator
+addressing mode.
+.Pp
+See the
+.Em .SMART
+control command.
+.It Em .ADDR
+Define word sized data. In 6502 mode, this is an alias for
+.Em .WORD
+and may be used for better readability if the data words
+are address values. In 65816 mode, the address is forced to
+be 16 bit wide to fit into the current segment.
+The command must be followed by a sequence
+of (not necessarily constant) expressions.
+.Pp
+Example:
+.Bd -literal -offset -indent
+\&.ADDR   $0D00, $AF13, _Clear
+.Ed
+.Pp
+See the
+.Em .FARADDR
+and
+.Em .WORD
+control commands.
+.It Em .ALIGN
+Align data to a given boundary. The command expects a
+constant integer argument in the range 1..65536, plus an
+optional second argument in byte range. If there is a second
+argument, it is used as fill value, otherwise the value
+defined in the linker configuration file is used (the
+default for this value is zero).
+.Pp
+.Em .ALIGN
+will insert fill bytes, and the number of fill bytes depend
+of the final address of the segment.
+.Em .ALIGN
+cannot insert a variable number of bytes, since that would
+break address calculations within the module. So each
+.Em .ALIGN
+expects the segment to be aligned to a multiple of the
+alignment, because that allows the number of fill bytes to
+be calculated in advance by the assembler. You are therefore
+required to specify a matching alignment for the segment in
+the linker config. The linker will output a warning if the
+alignment of the segment is less than what is necessary to
+have a correct alignment in the object file.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.align  256
+.Ed
+.Pp
+Some unexpected behaviour might occur if there are multiple
+.Em .ALIGN
+commands with different arguments. To allow the assembler to
+calculate the number of fill bytes in advance, the alignment
+of the segment must be a multiple of each of the alignment
+factors. This may result in unexpectedly large alignments
+for the segment within the module.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.ALIGN  15
+\&.BYTE   15
+\&.ALIGN  18
+\&.BYTE   18
+.Ed
+.Pp
+For the assembler to be able to align correctly, the segment
+must be aligned to the least common multiple of 15 and 18
+which is 90. The assembler will calculate this automatically
+and will mark the segment with this value.
+.Pp
+Unfortunately, the combined alignment may get rather large
+without the user knowing about it, wasting space in the
+final executable. If we add another alignment to the example
+above
+.Pp
+.Bd -literal -offset indent
+\&.ALIGN  15
+\&.BYTE   15
+\&.ALIGN  18
+\&.BYTE   18
+\&.ALIGN  251
+\&.BYTE   0
+.Ed
+.Pp
+the assembler will force a segment alignment to the least
+common multiple of 15, 18 and 251, which is 22590. To
+protect the user against errors, the assembler will issue a
+warning when the combined alignment exceeds 256. The command
+line option
+.Em --large-alignment
+will disable this warning.
+.Pp
+Please note that with alignments that are a power of two
+(which were the only alignments possible in older versions
+of the assembler), the problem is less severe, because the
+least common multiple of powers to the same base is always
+the larger one.
+.It Em .ASCIIZ
+Define a string with a trailing zero.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+Msg:    .ASCIIZ "Hello world"
+.Ed
+.Pp
+This will put the string "Hello world" followed by a binary
+zero into the current segment. There may be more strings
+separated by commas, but the binary zero is only appended
+once (after the last one). Strings will be translated using
+the current character mapping definition.
+.Pp
+See the
+.Em .BYTE Ns ,
+.Em .CHARMAP Ns , and
+.Em .LITERAL
+control commands.
+.It Em .ASSERT
+Add an assertion. The command is followed by an expression,
+an action specifier, and an optional message that is output
+in case the assertion fails. If no message was given, the
+string "Assertion failed" is used. The action specifier may
+be one of warning, error, ldwarning or lderror. In the
+former two cases, the assertion is evaluated by the
+assembler if possible, and in any case, it's also passed to
+the linker in the object file (if one is generated). The
+linker will then evaluate the expression when segment
+placement has been done.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.ASSERT         * = $8000, error, "Code not at $8000"
+.Ed
+.Pp
+The example assertion will check that the current location
+is at $8000, when the output file is written, and abort with
+an error if this is not the case. More complex expressions
+are possible. The action specifier warning outputs a
+warning, while the error specifier outputs an error message.
+In the latter case, generation of the output file is
+suppressed in both the assembler and linker.
+.It Em .AUTOIMPORT
+Is followed by a plus or a minus character. When switched on
+(using a +), undefined symbols are automatically marked as
+import instead of giving errors. When switched off (which
+is the default so this does not make much sense), this does
+not happen and an error message is displayed. The state of
+the autoimport flag is evaluated when the complete source
+was translated, before outputting actual code, so it is not
+possible to switch this feature on or off for separate
+sections of code. The last setting is used for all symbols.
+.Pp
+You should probably not use this switch because it delays
+error messages about undefined symbols until the link stage.
+The cc65 compiler (which is supposed to produce correct
+assembler code in all circumstances, something which is not
+true for most assembler programmers) will insert this
+command to avoid importing each and every routine from the
+runtime library.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.AUTOIMPORT     +       ; Switch on auto import
+.Ed
+.It Em .BANKBYTES
+Define byte sized data by extracting only the bank byte
+(that is, bits 16-23) from each expression. This is
+equivalent to
+.Em .BYTE
+with the operator '^' prepended to each expression in its
+list.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.DEFINE          MyTable    Item0, Item1, Item2, Item3
+TableLookupLo:   .LOBYTES   MyTable
+TableLookupHi:   .HIBYTES   MyTable
+TableLookupBank: .BANKBYTES MyTable
+.Ed
+.Pp
+which is equivalent to
+.Pp
+.Bd -literal -offset indent
+TableLookupLo:   .BYTE <Item0, <Item1, <Item2, <Item3
+TableLookupHi:   .BYTE >Item0, >Item1, >Item2, >Item3
+TableLookupBank: .BYTE ^Item0, ^Item1, ^Item2, ^Item3
+.Ed
+.Pp
+See the
+.Em .BYTE Ns ,
+.Em .HIBYTES Ns , and
+.Em .LOBYTES Ns ,
+control commands.
+.It Em .BSS
+Switch to the BSS segment. The name of the BSS segment is
+always "BSS", so this is a shortcut for
+.Pp
+.Bd -literal -offset indent
+\&.SEGMENT "BSS"
+.Ed
+.It Em .BYT Ns , Em .BYTE
+Define byte sized data. Must be followed by a sequence of
+(byte ranged) expressions or strings. Strings will be
+translated using the current character mapping definition.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.BYTE   "Hello "
+\&.BYT    "world", $0D, $00
+.Ed
+.Pp
+See the
+.Em .ASCIIZ Ns ,
+.Em .CHARMAP Ns , and
+.Em .LITERAL Ns ,
+control commands.
+.It Em .CASE
+Switch on or off case sensitivity on identifiers. The
+default is off (that is, identifiers are case sensitive),
+but may be changed by the -i switch on the command line. The
+command must be followed by a '+' or '-' character to switch
+the option on or off respectively.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.CASE   -               ; Identifiers are not case sensitive
+.Ed
+.It Em .CHARMAP
+Apply a custom mapping for characters for the commands
+.Em .ASCIIZ
+and
+.Em .BYTE
+.Ns . The command is followed by
+two numbers. The first one is the index of the source
+character (range 0..255); the second one is the mapping
+(range 0..255). The mapping applies to all character and
+string constants when they generate output; and, overrides a
+mapping table specified with the -t command line switch.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.CHARMAP        $41, $61        ; Map 'A' to 'a'
+.Ed
+.It Em .CODE
+Switch to the CODE segment. The name of the CODE segment is
+always "CODE", so this is a shortcut for
+.Pp
+.Bd -literal -offset indent
+\&.SEGMENT  "CODE"
+.Ed
+.Pp
+See also the
+.Em .SEGMENT
+control command.
+.It Em .CONDES
+Export a symbol and mark it in a special way. The linker is
+able to build tables of all such symbols. This may be used
+to automatically create a list of functions needed to
+initialize linked library modules.
+.Pp
+Note: The linker has a feature to build a table of marked
+routines, but it is your code that must call these routines,
+so just declaring a symbol with
+.Em .CONDES
+does nothing by itself.
+.Pp
+All symbols are exported as an absolute (16 bit) symbol. You
+don't need to use an additional
+.Em .EXPORT
+statement, this is implied by
+.Em .CONDES Ns .
+.Pp
+.Em .CONDES
+is followed by the type, which may be constructor,
+destructor or a numeric value between 0 and 6 (where 0 is
+the same as specifying constructor and 1 is equal to
+specifying destructor). The
+.Em .CONSTRUCTOR Ns ,
+.Em .DESTRUCTOR Ns, and
+.Em .INTERRUPTOR
+commands are actually shortcuts for
+.Em .CONDES
+with a type of constructor: respectively, destructor or interruptor.
+.Pp
+After the type, an optional priority may be specified.
+Higher numeric values mean higher priority. If no priority
+is given, the default priority of 7 is used. Be careful when
+assigning priorities to your own module constructors so they
+won't interfere with the ones in the cc65 library.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.CONDES         ModuleInit, constructor
+\&.CONDES         ModInit, 0, 16
+.Ed
+.Pp
+See the
+.Em .CONSTRUCTOR Ns ,
+.Em .DESTRUCTOR Ns , and
+.Em .INTERRUPTER Ns ,
+control commands and the separate section
+.Em MODULE CONTRUCTS & DESTRUCTORS
+for more details.
+.It Em .CONSTRUCTOR
+Export a symbol and mark it as a module constructor. This may be used together
+with the linker to build a table of constructor subroutines that are called by
+the startup code.
+.Pp
+Note: The linker has a feature to build a table of marked
+routines, but it is your code that must call these routines,
+so just declaring a symbol as constructor does nothing by
+itself.
+.Pp
+A constructor is always exported as an absolute (16 bit)
+symbol. You don't need to use an additional
+.Em .EXPORT
+statement, this is implied by
+.Em .CONSTRUCTOR Ns .
+It may have an optional priority that is separated by a
+comma. Higher numeric values mean a higher priority. If no
+priority is given, the default priority of 7 is used. Be
+careful when assigning priorities to your own module
+constructors so they won't interfere with the ones in the
+cc65 library.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.CONSTRUCTOR    ModuleInit
+\&.CONSTRUCTOR    ModInit, 16
+.Ed
+.Pp
+See the
+.Em .CONDES
+and
+.Em .DESTRUCTOR
+control commands and the separate section
+.Em MODULE CONTRUCTS & DESTRUCTORS
+for more details.
+.It Em .DATA
+Switch to the DATA segment. The name of the DATA segment is
+always "DATA", so this is a shortcut for
+.Pp
+.Bd -literal -offset indent
+\&.SEGMENT  "DATA"
+.Ed
+.Pp
+See the
+.Em .SEGMENT
+control command.
+.It Em .DBYT
+Define word sized data with the hi and lo bytes swapped (use
+.Em .WORD
+to create word sized data in native 65XX format). Must be
+followed by a sequence of (word ranged) expressions.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.DBYT   $1234, $4512
+.Ed
+.Pp
+This will emit the bytes
+.Pp
+.Bd -literal -offset indent
+$12 $34 $45 $12
+.Ed
+.Pp
+into the current segment in that order.
+.It Em .DEBUGINFO
+Switch on or off debug info generation. The default is off
+(that is, the object file will not contain debug infos), but
+may be changed by the -g switch on the command line. The
+command must be followed by a '+' or '-' character to switch
+the option on or off respectively.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.DEBUGINFO      +       ; Generate debug info
+.Ed
+.It Em .DEFINE
+Start a define style macro definition. The command is
+followed by an identifier (the macro name) and optionally a
+list of formal arguments in parenthesis
+.Pp
+Please note that
+.Em .DEFINE
+shares most disadvantages with its C counterpart, so the
+general advice is
+.Sy NOT
+to use
+.Em .DEFINE
+if you don't have to.
+.Pp
+See the
+.Em .UNDEFINE
+control cmmand and the section
+.Em MACROS Ns .
+.It Em .DELMAC Ns , Em .DELMACRO
+Delete a classic macro (defined with
+.Em .MACRO Ns ).
+The command is followed by the name of an existing macro.
+Its definition will be deleted together with the name. If
+necessary, another macro with this name may be defined
+later.
+.Pp
+See the
+.Em .ENDMACRO Ns ,
+.Em .EXITMACRO Ns , and
+.Em .MACRO Ns ,
+control commands and the section
+.Em MACROS Ns .
+.It Em .DESTRUCTOR
+Export a symbol and mark it as a module destructor. This may
+be used together with the linker to build a table of
+destructor subroutines that are called by the startup code.
+.Pp
+Note: The linker has a feature to build a table of marked
+routines, but it is your code that must call these routines,
+so just declaring a symbol as constructor does nothing by
+itself.
+.Pp
+A destructor is always exported as an absolute (16 bit)
+symbol. You don't need to use an additional
+.Em .EXPORT
+statement, this is implied by
+.Em .DESTRUCTOR Ns .
+It may have an optional priority that is separated by a
+comma. Higher numerical values mean a higher priority. If
+no priority is given, the default priority of 7 is used. Be
+careful when assigning priorities to your own module
+destructors so they won't interfere with the ones in the
+.Xr cc65 1
+library.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.DESTRUCTOR     ModuleDone
+\&.DESTRUCTOR     ModDone, 16
+.Ed
+.Pp
+.Pp
+See the
+section and the
+.Em .CONDES
+and
+.Em .CONSTRUCTOR
+control commands
+and the section
+.Em MODULE CONSTRUCTORS & DESTRUCTORS Ns .
+.It Em .DWORD
+Define dword sized data (4 bytes). Must be followed by a
+sequence of expressions.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.DWORD  $12344512, $12FA489
+.Ed
+.It Em .ELSE
+Conditional assembly: Reverse the current condition.
+.It Em .ELSEIF
+Conditional assembly: Reverse current condition and test a
+new one.
+.It Em .END
+Forced end of assembly. Assembly stops at this point, even
+if the command is read from an include file.
+.It Em .ENDENUM
+End a
+.Em .ENUM
+declaration.
+.It Em .ENDIF
+Conditional assembly: Close a
+.Em .IF ...
+or
+.Em .ELSE
+branch.
+.It Em .ENDMAC Ns , Em .ENDMACRO
+Marks the end of a macro definition.
+.Pp
+See the
+.Em .DELMACRO Ns ,
+.Em .EXITMACRO Ns , and
+.Em .MACRO Ns ,
+control commands and the section
+.Em MACROS Ns .
+.It Em .ENDPROC
+End of the local lexical level.
+.Pp
+See the
+.Em .PROC
+control command.
+.It Em .ENDREP Ns , Em .ENDREPEAT
+End a
+.Em .REPEAT
+block.
+.It Em .ENDSCOPE
+End of the local lexical level.
+.Pp
+See the
+.Em .SCOPE
+control command.
+.It Em .ENDSTRUCT
+End a struct definition.
+.Pp
+See the
+.Em .STRUCTS
+control command and the section
+.Em STRUCT AND UNIONS
+.It Em .ENDUNION
+Ends a union definition.
+.Pp
+See the
+.Em .UNION
+control command and the section
+.Em STRUCTS AND UNIONS
+.It Em .ENUM
+Start an enumeration. This directive is very similar to the
+C enum keyword. If a name is given, a new scope is created
+for the enumeration, otherwise the enumeration members are
+placed in the enclosing scope.
+.Pp
+In the enumeration body, symbols are declared. The first
+symbol has a value of zero, and each following symbol will
+get the value of the preceding, plus one. That behaviour
+may be overridden by an explicit assignment. Two symbols may
+have the same value.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.ENUM   errorcodes
+        no_error
+        file_error
+        parse_error
+\&.ENDENUM
+.Ed
+.Pp
+The above example will create a new scope named errorcodes
+with three symbols in it that get the values 0, 1, and 2
+respectively. Another way to write that would have been:
+.Pp
+.Bd -literal -offset indent
+\&.SCOPE  errorcodes
+        no_error        = 0
+        file_error      = 1
+        parse_error     = 2
+\&.ENDSCOPE
+.Ed
+.Pp
+Please note that explicit scoping must be used to access the
+identifiers:
+.Pp
+.Bd -literal -offset indent
+\&.WORD   errorcodes::no_error
+.Ed
+.Pp
+.Pp
+A more complex example:
+.Pp
+.Bd -literal -offset indent
+\&.ENUM
+        EUNKNOWN        = -1
+        EOK
+        EFILE
+        EBUSY
+        EAGAIN
+        EWOULDBLOCK     = EAGAIN
+\&.ENDENUM
+.Ed
+.Pp
+In that example, the enumeration does not have a name, which
+means that the members will be visible in the enclosing
+scope, and can be used in that scope without explicit
+scoping. The first member (EUNKNOWN) has the value -1. The
+values for the following members are incremented by one; so,
+EOK would be zero, and so on. EWOULDBLOCK is an alias for
+EAGAIN; so, it has an override for the value, using an
+already defined symbol.
+.It Em .ERROR
+Force an assembly error. The assembler will output an error
+message preceded by "User error". Assembly is continued but
+no object file will generated.
+.Pp
+This command may be used to check for initial conditions
+that must be set before assembling a source file.
+.Pp
+Example:
+.Pp
+.Bd -literal -offset indent
+\&.IF     foo = 1
+        ...
+\&.ELSEIF bar = 1
+        ...
+\&.ELSE
+\&.ERROR  "Must define foo or bar!"
+\&.ENDIF
+.Ed
+.Pp
+See the
+.Em .FATAL Ns ,
+.Em .OUT Ns , and
+.Em .WARNING
+control commands.
+.Pp
+.It Em .EXITMAC Ns , Em .EXITMACRO
+Abort a macro expansion immediately. This command is often
+useful in recursive macros.
+.Pp
+See the
+.Em .DELMACRO Ns ,
+.Em .ENDMACRO Ns , and
+.Em .MACRO
+control commands and the
+section
+.Em MACROS Ns .
+.It Em .EXPORT
+Make symbols accessible from other modules. Must be followed
+by a comma separated list of symbols to export, with each
+one optionally followed by an address specification and
+(also optional) an assignment. Using an additional
+assignment in the export statement allows to define and
+export a symbol in one statement. The default is to export
+the symbol with the address size it actually has. The
+assembler will issue a warning, if the symbol is exported
+with an address size smaller than the actual address size.
+.Pp
+Examples:
+.Pp
+.Bd -literal -offset indent
+\&.EXPORT foo
+\&.EXPORT bar: far
+\&.EXPORT foobar: far = foo * bar
+\&.EXPORT baz := foobar, zap: far = baz - bar
+.Ed
+.Pp
+As with constant definitions, using := instead of = marks
+the symbols as a label.
+.Pp
+See the
+.Em .EXPORTZP
+control commands.
+.It Em .EXPORTZP
+Make symbols accessible from other modules. Must be followed
+by a comma separated list of symbols to export. The exported
+symbols are explicitly marked as zero page symbols. An
+assignment may be included in the
+.Em .EXPORTZP
+statement. This allows to define and export a symbol in one statement.
+.Pp
+Examples:
+.Pp
+.Bd -literal -offset indent
+\&.EXPORTZP  foo, bar
+\&.EXPORTZP  baz := $02
+.Ed
+.Pp
+See the
+.Em .EXPORT
+control command.
+.It Em .FARADDR
+Define far (24 bit) address data. The command must be
+followed by a sequence of (not necessarily constant)
+expressions.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.FARADDR        DrawCircle, DrawRectangle, DrawHexagon
+.Ed
+.Pp
+See the
+.Em .ADDR
+control command.
+.It Em .FATAL
+Force an assembly error and terminate assembly. The
+assembler will output an error message preceded by "User
+error" and will terminate assembly immediately.
+.Pp
+This command may be used to check for initial conditions
+that must be set before assembling a source file.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.IF     foo = 1
+        ...
+\&.ELSEIF bar = 1
+        ...
+\&.ELSE
+\&.FATAL  "Must define foo or bar!"
+\&.ENDIF
+.Ed
+.It Em .FEATURE
+This directive may be used to enable one or more
+compatibility features of the assembler. While the use of
+.Em .FEATURE
+should be avoided when possible, it may be useful when
+porting sources written for other assemblers here is no
+way to switch a feature off, once you have enabled it, so
+using
+.Pp
+.Bd -literal -offset indent
+\&.FEATURE        xxx
+.Ed
+.Pp
+will enable the feature until end of assembly is reached.
+.Pp
+The following features are available:
+.Pp
+.Bl -tag -width "XXXXXX"
+.It addrsize
+.Pp
+Enables the
+.Em .ADDRSIZE
+pseudo function. This function is experimental and not
+enabled by default.
+.Pp
+See the
+.Em .ADDRSIZE
+control command.
+.It at_in_identifiers
+Accept the at character ('@') as a valid character in
+identifiers. The at character is not allowed to start an
+identifier, even with this feature enabled.
+.It bracket_as_indirect
+Use [] instead of () for the indirect addressing modes.
+Example:
+.Bd -literal -offset indent
+LDA     [$82]
+LDA     [$82,x]
+LDA     [$82],y
+JMP     [$fffe]
+JMP     [table,x]
+.Ed
+.Pp
+.Em Note Ns :
+This should not be used in 65186 mode because it conflicts
+with the 65816 instruction syntax for far addressing. See
+the section covering address sizes for more information.
+.It c_comments
+Allow C like comments using /* and */ as left and right
+comment terminators. Note that C comments may not be
+nested. There's also a pitfall when using C like comments:
+All statements must be terminated by "end-of-line". Using C
+like comments, it is possible to hide the newline, which
+results in error messages.
+.Pp
+See the following non working
+example:
+.Pp
+.Bd -literal -offset indent
+        lda     #$00  /* This comment hides the newline
+*/      sta     $82
+.Ed
+.It dollar_in_identifiers
+Accept the dollar sign ('$') as a valid character in
+identifiers. The dollar character is not allowed to start an
+identifier, even with this feature enabled.
+.It dollar_is_pc
+The dollar sign may be used as an alias for the star ('*'),
+which gives the value of the current PC in expressions.
+.Pp
+Note: Assignment to the pseudo variable is not allowed.
+.It force_range
+Force expressions into their valid range for immediate
+addressing and storage operators like
+.Em .BYTE
+and
+.Em .WORD Ns .
+Be very careful with this one, since it will completely
+disable error checks.
+.It labels_without_colons
+Allow labels without a trailing colon. These labels are only
+accepted, if they start at the beginning of a line (no
+leading white space).
+.It leading_dot_in_identifiers
+Accept the dot ('.') as the first character of an
+identifier. This may be used for example to create macro
+names that start with a dot emulating control directives of
+other assemblers. Note however, that none of the reserved
+keywords built into the assembler, that starts with a dot,
+may be overridden. When using this feature, you may also get
+into trouble if later versions of the assembler define new
+keywords starting with a dot.
+.It loose_char_term
+Accept single quotes as well as double quotes as terminators
+for char constants.
+.It loose_string_term
+Accept single quotes as well as double quotes as terminators
+for string constants.
+.It missing_char_term
+Accept single quoted character constants where the
+terminating quote is missing.
+.Pp
+.Bd -literal -offset indent
+lda     #'a
+.Ed
+.Pp
+.Em Note Ns :
+This does not work in conjunction with
+.Em .FEATURE loose_string_term Ns ,
+since in this case the input would be ambiguous.
+.It org_per_seg
+This feature makes relocatable/absolute mode local to the
+current segment. Using
+.Em .ORG
+when org_per_seg is in effect will only enable absolute mode
+for the current segment. Dito for
+.Em .RELOC Ns .
+.It pc_assignment
+Allow assignments to the PC symbol ('*' or '$' if
+dollar_is_pc is enabled). Such an assignment is handled
+identical to the
+.Em .ORG
+command (which is usually not needed, so just removing the
+lines with the assignments may also be an option when
+porting code written for older assemblers).
+.It string_escapes
+Allow C-style backslash escapes within string constants to
+embed special characters. The following escapes are
+accepted:
+.Pp
+.Bd -literal -offset indent
+\e\e   backslash       ($5C)
+\e'   single quote    ($27)
+\e"   double quote    ($22)
+\et   tab             ($09)
+\er   carriage return ($0D)
+\en   newline         ($0A)
+\exNN                 ($NN)
+.Ed
+.Pp
+Note that string escapes are converted to platform-specific
+characters in the same way that other characters are
+converted.
+.It ubiquitous_idents
+Allow the use of instructions names as names for macros and
+symbols. This makes it possible to "overload" instructions
+by defining a macro with the same name. This does also make
+it possible to introduce hard to find errors in your code,
+so be careful!
+.It underline_in_numbers
+Allow underlines within numeric constants. These may be used
+for grouping the digits of numbers for easier reading.
+Example:
+.Bd -literal -offset indent
+\&.FEATURE        underline_in_numbers
+\&.WORD           %1100001110100101
+\&.WORD           %1100_0011_1010_0101    ; Identical but easier to read
+.Ed
+.Pp
+It is also possible to specify features on the command line
+using the
+.Em --feature
+command line option. This is useful when translating sources
+written for older assemblers, when you don't want to change
+the source code.
+.Pp
+As an example, to translate sources written for Andre
+Fachats xa65 assembler, the features
+.Em labels_without_colons Ns ,
+.Em pc_assignment Ns , and
+.Em loose_char_term
+may be helpful. They do not make ca65 completely compatible,
+so you may not be able to translate the sources without
+changes, even when enabling these features. However, I have
+found several sources that translate without problems when
+enabling these features on the command line.
+.El
+.It Em FILEOPT Ns , Em .FOPT
+Insert an option string into the object file. There are two
+forms of this command, one specifies the option by a
+keyword, the second specifies it as a number. Since usage of
+the second one needs knowledge of the internal encoding, its
+use is not recommended and I will only describe the first
+form here.
+.Pp
+The command is followed by one of the keywords
+.Pp
+.Bd -literal -offset indent
+author, comment, compiler
+.Ed
+.Pp
+a comma and a string. The option is written into the object
+file together with the string value. This is currently
+unidirectional and there is no way to actually use these
+options once they are in the object file.
+.Pp
+Examples:
+.Bd -literal -offset indent
+\&.FILEOPT        comment, "Code stolen from my brother"
+\&.FILEOPT        compiler, "BASIC 2.0"
+\&.FOPT           author, "J. R. User"
+.Ed
+.It Em .FORCEIMPORT
+Import an absolute symbol from another module. The command
+is followed by a comma separated list of symbols to import.
+The command is similar to
+.Em .IMPORT Ns ,
+but the import reference is always written to the
+generated object file, even if the symbol is never
+referenced (
+.Em .IMPORT
+will not generate import references for unused symbols).
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.FORCEIMPORT    needthisone, needthistoo
+.Ed
+.Pp
+See the
+.Em .IMPORT
+control command.
+.Pp
+.It Em .GLOBAL
+Declare symbols as global. Must be followed by a comma
+separated list of symbols to declare. Symbols from the list,
+that are defined somewhere in the source, are exported, all
+others are imported. Additional
+.Em .IMPORT
+or
+.Em .EXPORT
+commands
+for the same symbol are allowed.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.GLOBAL foo, bar
+.Ed
+.Pp
+.It Em .GLOBALZP
+Declare symbols as global. Must be followed by a comma
+separated list of symbols to declare. Symbols from the list,
+that are defined somewhere in the source, are exported, all
+others are imported. Additional
+.Em .IMPORTZP
+or
+.Em .EXPORTZP
+commands for the same symbol are allowed. The symbols in the
+list are explicitly marked as zero page symbols.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.GLOBALZP foo, bar
+.Ed
+.Pp
+.It Em .HIBYTES
+Define byte sized data by extracting only the high byte
+(that is, bits 8-15) from each expression. This is
+equivalent to
+.Em .BYTE
+with the operator '>' prepended to each
+expression in its list.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.LOBYTES         $1234, $2345, $3456, $4567
+\&.HIBYTES         $fedc, $edcb, $dcba, $cba9
+.Ed
+.Pp
+which is equivalent to
+.Bd -literal -offset indent
+\&.BYTE            $34, $45, $56, $67
+\&.BYTE            $fe, $ed, $dc, $cb
+.Ed
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.DEFINE MyTable Item0, Item1, Item2, Item3
+
+TableLookupLo:   .LOBYTES MyTable
+TableLookupHi:   .HIBYTES MyTable
+.Ed
+.Pp
+which is equivalent to
+.Bd -literal -offset indent
+TableLookupLo:   .BYTE <Item0, <Item1, <Item2, <Item3
+TableLookupHi:   .BYTE >Item0, >Item1, >Item2, >Item3
+.Ed
+.Pp
+See also:
+.Em .BYTE Ns ,
+.Em .LOBYTES Ns ,
+.Em .BANKBYTES
+.Pp
+.It Em .I16
+Valid only in 65816 mode. Switch the index registers to 16
+bit.
+.Pp
+Note: This command will not emit any code, it will tell the
+assembler to create 16 bit operands for immediate operands.
+.Pp
+See also the
+.Em .I8
+and
+.Em .SMART
+commands.
+.Pp
+.It Em .I8
+Valid only in 65816 mode. Switch the index registers to 8
+bit.
+.Pp
+Note: This command will not emit any code, it will tell the
+assembler to create 8 bit operands for immediate operands.
+.Pp
+See also the
+.Em .I16
+and
+.Em .SMART
+commands.
+.Pp
+.It Em .IF
+Conditional assembly: Evaluate an expression and switch
+assembler output on or off depending on the expression. The
+expression must be a constant expression, that is, all
+operands must be defined.
+.Pp
+A expression value of zero evaluates to FALSE, any other
+value evaluates to TRUE.
+.Pp
+.It Em .IFBLANK
+Conditional assembly: Check if there are any remaining
+tokens in this line, and evaluate to FALSE if this is the
+case, and to TRUE otherwise. If the condition is not true,
+further lines are not assembled until an
+.Em .ELSE Ns ,
+.Em .ELSEIF Ns ,
+or
+.Em .ENDIF
+directive.
+.Pp
+This command is often used to check if a macro parameter was
+given. Since an empty macro parameter will evaluate to
+nothing, the condition will evaluate to TRUE if an empty
+parameter was given.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACRO     arg1, arg2
+\&.IFBLANK   arg2
+           lda     #arg1
+\&.ELSE
+           lda     #arg2
+\&.ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+See also:
+.Em .BLANK
+.Pp
+.It Em .IFCONST
+Conditional assembly: Evaluate an expression and switch
+assembler output on or off depending on the constness of the
+expression.
+.Pp
+A const expression evaluates to to TRUE, a non const
+expression (one containing an imported or currently
+undefined symbol) evaluates to FALSE.
+.Pp
+See also:
+.Em .CONST
+.Pp
+.It Em .IFDEF
+Conditional assembly: Check if a symbol is defined. Must be
+followed by a symbol name. The condition is true if the the
+given symbol is already defined, and false otherwise.
+.Pp
+See also:
+.Em .DEFINED
+.Pp
+.It Em .IFNBLANK
+Conditional assembly: Check if there are any remaining
+tokens in this line, and evaluate to TRUE if this is the
+case, and to FALSE otherwise. If the condition is not true,
+further lines are not assembled until an
+.Em .ELSE Ns ,
+.Em .ELSEIF Ns ,
+or
+.Em .ENDIF
+directive.
+.Pp
+This command is often used to check if a macro parameter was
+given. Since an empty macro parameter will evaluate to
+nothing, the condition will evaluate to FALSE if an empty
+parameter was given.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACRO     arg1, arg2
+           lda     #arg1
+\&.IFNBLANK  arg2
+           lda     #arg2
+\&.ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+See also:
+.Em .BLANK
+.Pp
+.It Em .IFNDEF
+Conditional assembly: Check if a symbol is defined. Must be
+followed by a symbol name. The condition is true if the the
+given symbol is not defined, and false otherwise.
+.Pp
+See also:
+.Em .DEFINED
+.Pp
+.It Em .IFNREF
+Conditional assembly: Check if a symbol is referenced. Must
+be followed by a symbol name. The condition is true if if
+the the given symbol was not referenced before, and false
+otherwise.
+.Pp
+See also:
+.Em .REFERENCED
+.Pp
+.It Em .IFP02
+Conditional assembly: Check if the assembler is currently in
+6502 mode (see
+.Em .P02
+command).
+.Pp
+.It Em .IFP4510
+Conditional assembly: Check if the assembler is currently in
+4510 mode (see
+.Em .P4510
+command).
+.Pp
+.It Em .IFP816
+Conditional assembly: Check if the assembler is currently in
+65816 mode (see
+.Em .P816
+command).
+.Pp
+.It Em .IFPC02
+Conditional assembly: Check if the assembler is currently in
+65C02 mode (see
+.Em .PC02
+command).
+.Pp
+.It Em .IFPDTV
+Conditional assembly: Check if the assembler is currently in
+6502DTV mode (see
+.Em .PDTV
+command).
+.Pp
+.It Em .IFPSC02
+Conditional assembly: Check if the assembler is currently in
+65SC02 mode (see
+.Em .PSC02
+command).
+.Pp
+.It Em .IFREF
+Conditional assembly: Check if a symbol is referenced. Must
+be followed by a symbol name. The condition is true if if
+the the given symbol was referenced before, and false
+otherwise.
+.Pp
+This command may be used to build subroutine libraries in
+include files (you may use separate object modules for this
+purpose too).
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.IFREF  ToHex                   ; If someone used this subroutine
+ToHex:  tay                     ; Define subroutine
+        lda     HexTab,y
+        rts
+\&.ENDIF
+.Ed
+.Pp
+See also:
+.Em .REFERENCED
+and
+.Em .REFERTO
+.Pp
+.It Em .IMPORT
+Import a symbol from another module. The command is followed
+by a comma separated list of symbols to import, with each
+one optionally followed by an address specification.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.IMPORT foo
+\&.IMPORT bar: zeropage
+.Ed
+.Pp
+See:
+.Em .IMPORTZP
+.Pp
+.It Em .IMPORTZP
+Import a symbol from another module. The command is followed
+by a comma separated list of symbols to import. The symbols
+are explicitly imported as zero page symbols (that is,
+symbols with values in byte range).
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.IMPORTZP       foo, bar
+.Ed
+.Pp
+See:
+.Em .IMPORT
+.Pp
+.It Em .INCBIN
+Include a file as binary data. The command expects a string
+argument that is the name of a file to include literally in
+the current segment. In addition to that, a start offset and
+a size value may be specified, separated by commas. If no
+size is specified, all of the file from the start offset to
+end-of-file is used. If no start position is specified
+either, zero is assumed (which means that the whole file is
+inserted).
+.Pp
+Example:
+.Bd -literal -offset indent
+; Include whole file
+\&.INCBIN         "sprites.dat"
+
+; Include file starting at offset 256
+\&.INCBIN         "music.dat", $100
+
+; Read 100 bytes starting at offset 200
+\&.INCBIN         "graphics.dat", 200, 100
+.Ed     
+.Pp
+.It Em .INCLUDE
+Include another file. Include files may be nested up to a
+depth of 16.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.INCLUDE        "subs.inc"
+.Ed
+.Pp
+.It Em .INTERRUPTOR
+Export a symbol and mark it as an interruptor. This may be
+used together with the linker to build a table of
+interruptor subroutines that are called in an interrupt.
+.Pp
+Note: The linker has a feature to build a table of marked
+routines, but it is your code that must call these routines,
+so just declaring a symbol as interruptor does nothing by
+itself.
+.Pp
+An interruptor is always exported as an absolute (16 bit)
+symbol. You don't need to use an additional .export
+statement, this is implied by .interruptor. It may have an
+optional priority that is separated by a comma. Higher
+numeric values mean a higher priority. If no priority is
+given, the default priority of 7 is used. Be careful when
+assigning priorities to your own module constructors so they
+won't interfere with the ones in the cc65 library.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.INTERRUPTOR    IrqHandler
+\&.INTERRUPTOR    Handler, 16
+.Ed
+.Pp
+See the
+.Em .CONDES
+command and the separate section 
+.Em MODULE CONSTRUCTORS & DESTRUCTORS
+explaining the feature in more detail.
+.Pp
+.It Em .LINECONT
+Switch on or off line continuations using the backslash character before a newline. The option is off by default. Note: Line continuations do not work in a comment. A backslash at the end of a comment is treated as part of the comment and does not trigger line continuation. The command must be followed by a '+' or '-' character to switch the option on or off respectively.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.LINECONT       +               ; Allow line continuations
+
+lda     \\
+        #$20                    ; This is legal now
+.Ed
+.Pp
+.It Em .LIST
+Enable output to the listing. The command must be followed
+by a boolean switch ("on", "off", "+" or "-") and will
+enable or disable listing output. The option has no effect
+if the listing is not enabled by the command line switch -l.
+If -l is used, an internal counter is set to 1. Lines are
+output to the listing file, if the counter is greater than
+zero, and suppressed if the counter is zero. Each use of
+.Em .LIST
+will increment or decrement the counter.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.LIST   on              ; Enable listing output
+.Ed
+.Pp
+.It Em .LISTBYTES
+Set, how many bytes are shown in the listing for one source
+line. The default is 12, so the listing will show only the
+first 12 bytes for any source line that generates more than
+12 bytes of code or data. The directive needs an argument,
+which is either "unlimited", or an integer constant in the
+range 4..255.
+.Pp
+Examples:
+.Bd -literal -offset indent
+\&.LISTBYTES      unlimited       ; List all bytes
+\&.LISTBYTES      12              ; List the first 12 bytes
+\&.INCBIN         "data.bin"      ; Include large binary file
+.Ed
+.Pp
+.It Em .LITERAL
+Define byte sized data. Must be followed by a sequence of
+(byte ranged) expressions or strings. Strings will disregard
+the current character mapping definition and will be
+interpreted literally.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.LITERAL    "Hello "
+\&.LITERAL    "world", $0D, $00
+.Ed
+.Pp
+See:
+.Em .ASCIIZ,
+.Em .BYTE
+.Pp
+.It Em .LOBYTES
+Define byte sized data by extracting only the low byte (that
+is, bits 0-7) from each expression. This is equivalent to
+.Em .BYTE
+with the operator '<' prepended to each expression in
+its list.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.LOBYTES         $1234, $2345, $3456, $4567
+\&.HIBYTES         $fedc, $edcb, $dcba, $cba9
+.Ed
+.Pp
+which is equivalent to
+.Bd -literal -offset indent
+\&.BYTE            $34, $45, $56, $67
+\&.BYTE            $fe, $ed, $dc, $cb
+.Ed
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.DEFINE MyTable Item0, Item1, Item2, Item3
+
+TableLookupLo:   .LOBYTES MyTable
+TableLookupHi:   .HIBYTES MyTable
+.Ed
+.Pp
+which is equivalent to
+.Bd -literal -offset indent
+TableLookupLo:   .BYTE <Item0, <Item1, <Item2, <Item3
+TableLookupHi:   .BYTE >Item0, >Item1, >Item2, >Item3
+.Ed
+.Pp
+See also:
+.Em .BYTE Ns ,
+.Em .HIBYTES Ns ,
+.Em .BANKBYTES
+.Pp
+.It Em .LOCAL
+This command may only be used inside a macro definition. It
+declares a list of identifiers as local to the macro
+expansion.
+.Pp
+A problem when using macros are labels: Since they don't
+change their name, you get a "duplicate symbol" error if the
+macro is expanded the second time. Labels declared with
+.Em .LOCAL
+have their name mapped to an internal unique name
+(___ABCD__) with each macro invocation.
+.Pp
+Some other assemblers start a new lexical block inside a
+macro expansion. This has some drawbacks however, since that
+will not allow any symbol to be visible outside a macro, a
+feature that is sometimes useful. The
+.Em .LOCAL
+command is in my eyes a better way to address the problem.
+.Pp
+You get an error when using
+.Em .LOCAL
+outside a macro.
+.Pp
+.It Em .LOCALCHAR
+Defines the character that start "cheap" local labels. You
+may use one of '@' and '?' as start character. The default
+is '@'.
+.Pp
+Cheap local labels are labels that are visible only between
+two non cheap labels. This way you can reuse identifiers
+like "loop" without using explicit lexical nesting.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.LOCALCHAR      '?'
+
+Clear:  lda     #$00            ; Global label
+?Loop:  sta     Mem,y           ; Local label
+        dey
+        bne     ?Loop           ; Ok
+        rts
+Sub:    ...                     ; New global label
+        bne     ?Loop           ; ERROR: Unknown identifier!
+.Ed
+.Pp
+.It Em .MACPACK
+Insert a predefined macro package. The command is followed
+by an identifier specifying the macro package to insert.
+Available macro packages are:
+.Bd -literal -offset indent
+atari           Defines the scrcode macro.
+cbm             Defines the scrcode macro.
+cpu             Defines constants for the .CPU variable.
+generic         Defines generic macros like add, sub, and blt.
+longbranch      Defines conditional long-jump macros.
+.Ed
+.Pp
+Including a macro package twice, or including a macro
+package that redefines already existing macros will lead to
+an error.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACPACK        longbranch      ; Include macro package
+
+        cmp     #$20            ; Set condition codes
+        jne     Label           ; Jump long on condition
+.Ed
+.Pp
+Macro packages are explained in more detail in section
+.Em MACRO PACKAGES Ns .
+.Pp
+.It Em .MAC Ns , Em .MACRO
+Start a classic macro definition. The command is followed by
+an identifier (the macro name) and optionally by a comma
+separated list of identifiers that are macro parameters. A
+macro definition is terminated by
+.Em .ENDMACRO Ns .
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACRO  ldax    arg             ; Define macro ldax
+        lda     arg
+        ldx     arg+1
+.Ed
+.Pp
+See:
+.Em .DELMACRO Ns ,
+.Em .ENDMACRO Ns ,
+.Em .EXITMACRO
+.Pp
+See also section
+.Em MACROS Ns .
+.Pp
+.It Em .ORG
+Start a section of absolute code. The command is followed by
+a constant expression that gives the new PC counter location
+for which the code is assembled. Use
+.Em .RELOC
+to switch back
+to relocatable code.
+.Pp
+By default, absolute/relocatable mode is global (valid even
+when switching segments). Using
+.Em .FEATURE
+org_per_seg it can
+be made segment local.
+.Pp
+Please note that you do not need
+.Em .ORG
+in most cases. Placing
+code at a specific address is the job of the linker, not the
+assembler, so there is usually no reason to assemble code to
+a specific address.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.ORG    $7FF            ; Emit code starting at $7FF
+.Ed
+.Pp
+.It Em .OUT
+Output a string to the console without producing an error.
+This command is similar to
+.Em .ERROR Ns ,
+however, it does not force an assembler error that prevents
+the creation of an object file.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.OUT    "This code was written by the codebuster(tm)"
+.Ed
+.Pp
+See also:
+.Em .ERROR Ns ,
+.Em .FATAL Ns ,
+.Em .WARNING
+.Pp
+.It Em .P02
+Enable the 6502 instruction set, disable 65SC02, 65C02 and
+65816 instructions. This is the default if not overridden by
+the
+.Em --cpu
+command line option.
+.Pp
+See:
+.Em .PC02 Ns ,
+.Em .PSC02 Ns ,
+.Em .P816 Ns ,
+and
+.Em .P4510
+.Pp
+.It Em .P4510
+Enable the 4510 instruction set. This is a superset of the
+65C02 and 6502 instruction sets.
+.Pp
+See:
+.Em .P02 Ns ,
+.Em .PSC02 Ns ,
+.Em .PC02 Ns ,
+and
+.Em .P816
+.Pp
+.It Em .P816
+Enable the 65816 instruction set. This is a superset of the
+65SC02 and 6502 instruction sets.
+.Pp
+See:
+.Em .P02 Ns ,
+.Em .PSC02 Ns ,
+.Em .PC02 Ns ,
+and
+.Em .P4510
+.Pp
+.It Em .PAGELEN Ns , Em .PAGELENGTH
+Set the page length for the listing. Must be followed by an
+integer constant. The value may be "unlimited", or in the
+range 32 to 127. The statement has no effect if no listing
+is generated. The default value is -1 (unlimited) but may be
+overridden by the
+.Em --pagelength
+command line option. Beware:
+Since ca65 is a one pass assembler, the listing is generated
+after assembly is complete, you cannot use multiple line
+lengths with one source. Instead, the value set with the
+last
+.Em .PAGELENGTH
+is used.
+.Pp
+Examples:
+.Bd -literal -offset indent
+\&.PAGELENGTH     66              ; Use 66 lines per listing page
+
+\&.PAGELENGTH     unlimited       ; Unlimited page length
+.Ed
+.Pp
+.It Em .PC02
+Enable the 65C02 instructions set. This instruction set
+includes all 6502 and 65SC02 instructions.
+.Pp
+See:
+.Em .P02 Ns ,
+.Em .PSC02 Ns ,
+.Em .P816 Ns ,
+and
+.Em .P4510
+.Pp
+.It Em .PDTV
+Enable the 6502DTV instruction set. This is a superset of
+the 6502 instruction set.
+.Pp
+See:
+.Em .P02
+.Pp
+.It Em .POPCHARMAP
+Pop the last character mapping from the stack, and activate
+it.
+.Pp
+This command will switch back to the character mapping that
+was last pushed onto the character mapping stack using the
+.Em .PUSHCHARMAP
+command, and remove this entry from the stack.
+.Pp
+The assembler will print an error message if the mappting
+stack is empty when this command is issued.
+.Pp
+See:
+.Em .CHARMAP Ns , 
+.Em .PUSHCHARMAP
+.Pp
+.It Em .POPCPU
+Pop the last character mapping from the stack, and activate
+it.
+.Pp
+This command will switch back to the character mapping that
+was last pushed onto the character mapping stack using the
+.Em .PUSHCHARMAP
+command, and remove this entry from the stack.
+.Pp
+The assembler will print an error message if the mappting
+stack is empty when this command is issued.
+.Pp
+See:
+.Em .CHARMAP Ns ,
+.Em .PUSHCHARMAP
+.Pp
+.It Em .POPSEG
+Pop the last pushed segment from the stack, and set it.
+.Pp
+This command will switch back to the segment that was last
+pushed onto the segment stack using the
+.Em .PUSHSEG
+command,
+and remove this entry from the stack.
+.Pp
+The assembler will print an error message if the segment
+stack is empty when this command is issued.
+.Pp
+See:
+.Em .PUSHSEG
+.Pp
+.It Em .PROC
+Start a nested lexical level with the given name and adds a
+symbol with this name to the enclosing scope. All new
+symbols from now on are in the local lexical level and are
+accessible from outside only via explicit scope
+specification. Symbols defined outside this local level may
+be accessed as long as their names are not used for new
+symbols inside the level. Symbols names in other lexical
+levels do not clash, so you may use the same names for
+identifiers. The lexical level ends when the
+.Em .ENDPROC
+command is read. Lexical levels may be nested up to a depth
+of 16 (this is an artificial limit to protect against errors
+in the source).
+.Pp
+Note: Macro names are always in the global level and in a
+separate name space..Pp
+Example:
+.Bd -literal -offset indent
+\&.PROC   Clear           ; Define Clear subroutine, start new level
+        lda     #$00
+L1:     sta     Mem,y   ; L1 is local and does not cause a
+                        ; duplicate symbol error if used in other
+                        ; places
+        dey
+        bne     L1      ; Reference local symbol
+        rts
+\&.ENDPROC                ; Leave lexical level
+.Ed
+.Pp
+See:
+.Em .ENDPROC
+and
+.Em .SCOPE
+.Pp
+.It Em .PSC02
+Enable the 65SC02 instructions set. This instruction set
+includes all 6502 instructions.
+.Pp
+See:
+.Em .P02 Ns ,
+.Em .PC02 Ns ,
+.Em .P816 Ns ,
+and
+.Em .P4510
+.It Em .PUSHCHARMAP
+Push the currently active character mapping onto a stack.
+The stack has a size of 16 entries.
+.Pp
+.Em .PUSHCHARMAP
+allows together with
+.Em .POPCHARMAP
+to switch to
+another character mapping and to restore the old characther
+mapping later, without knowledge of the current mapping.
+.Pp
+The assembler will print an error message if the character
+mapping stack is already full, when this command is issued.
+.Pp
+See:
+.Em .CHARMAP
+and
+.Em .POPCHARMAP
+.Pp
+.It Em .PUSHCPU
+Push the currently active CPU onto a stack. The stack has a
+size of 8 entries.
+.Pp
+.Em .PUSHCPU
+allows together with
+.Em .POPCPU
+to switch to another
+CPU and to restore the old CPU later, without knowledge of
+the current CPU setting.
+.Pp
+The assembler will print an error message if the CPU stack
+is already full, when this command is issued.
+.Pp
+See:
+.Em .CPU Ns ,
+.Em .POPCPU Ns ,
+and
+.Em .SETCPU
+.Pp
+.It Em .PUSHSEG
+Push the currently active segment onto a stack. The entries
+on the stack include the name of the segment and the segment
+type. The stack has a size of 16 entries.
+.Pp
+.Em .PUSHSEG
+allows together with
+.Em .POPSEG
+to switch to another
+segment and to restore the old segment later, without even
+knowing the name and type of the current segment.
+.Pp
+The assembler will print an error message if the segment
+stack is already full, when this command is issued.
+.Pp
+See:
+.Em .POPSEG
+.Pp
+.It Em .REFERTO Ns , Em .REFTO
+Mark a symbol as referenced.
+.Pp
+It is useful in combination with the
+.Em .IFREF
+command. A
+subroutine with two entry points can be created. When the
+first entry point is called, it sets some default value as
+an argument, and falls through into the second entry point.
+.Em .REFERTO
+helps to ensure that the second part is included
+into binary when only the first entry point is actually used
+from the code.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.IFREF NegateValue              ; If this subroutine is used
+NegateValue:                    ; Define it
+        lda     #0
+        sec
+        sbc     Value
+    .IFREF ResetValue           ; If the ResetValue is also used
+        jmp     SetValue        ; Jump over it
+    .ELSE
+        .REFTO  SetValue        ; Ensure that SetValue will be included
+    .ENDIF
+\&.ENDIF
+
+\&.IFREF ResetValue               ; If this subroutine is used
+ResetValue:                     ; Define it
+        lda     #0              ; Set a default value
+        .REFTO  SetValue        ; Ensure that SetValue will be included
+\&.ENDIF
+
+\&.IFREF SetValue                 ; If this or previous subroutine is used
+SetValue:
+        sta     Value
+        rts
+\&.ENDIF
+.Ed
+.Pp
+.It Em .RELOC
+Switch back to relocatable mode. See the .ORG command.
+.Pp
+.It Em .REPEAT
+Repeat all commands between
+.Em .REPEAT
+and
+.Em .ENDREPEAT
+constant number of times. The command is followed by a
+constant expression that tells how many times the commands
+in the body should get repeated. Optionally, a comma and an
+identifier may be specified. If this identifier is found in
+the body of the repeat statement, it is replaced by the
+current repeat count (starting with zero for the first time
+the body is repeated).
+.Pp
+.Em .REPEAT
+statements may be nested. If you use the same repeat
+count identifier for a nested
+.Em .REPEAT
+statement, the one
+from the inner level will be used, not the one from the
+outer level.
+.Pp
+Example:
+.Pp
+The following macro will emit a string that is "encrypted"
+in that all characters of the string are XORed by the value
+$55.
+.Bd -literal -offset indent
+\&.MACRO  Crypt   Arg
+        .REPEAT .STRLEN(Arg), I
+        .BYTE   .STRAT(Arg, I) ^ $55
+        .ENDREP
+\&.ENDMACRO
+.Ed
+.Pp
+See:
+.Em .ENDREPEAT
+.Pp
+.It Em .RES
+Reserve storage. The command is followed by one or two
+constant expressions. The first one is mandatory and
+defines, how many bytes of storage should be defined. The
+second, optional expression must by a constant byte value
+that will be used as value of the data. If there is no fill
+value given, the linker will use the value defined in the
+linker configuration file (default: zero).
+.Pp
+Example:
+.Bd -literal -offset indent
+; Reserve 12 bytes of memory with value $AA
+\&.RES    12, $AA
+.Ed
+.Pp
+.It Em .RODATA
+Switch to the RODATA segment. The name of the RODATA segment
+is always "RODATA", so this is a shortcut for
+.Bd -literal -offset indent
+\&.SEGMENT  "RODATA"
+.Ed
+.Pp
+The RODATA segment is a segment that is used by the compiler
+for readonly data like string constants.
+.Pp
+See also the
+.Em .SEGMENT
+command.
+.Pp
+.It Em .SCOPE
+Start a nested lexical level with the given name. All new
+symbols from now on are in the local lexical level and are
+accessible from outside only via explicit scope
+specification. Symbols defined outside this local level may
+be accessed as long as their names are not used for new
+symbols inside the level. Symbols names in other lexical
+levels do not clash, so you may use the same names for
+identifiers. The lexical level ends when the
+.Em .ENDSCOPE
+command is read. Lexical levels may be nested up to a depth
+of 16 (this is an artificial limit to protect against errors
+in the source).
+.Pp
+Note: Macro names are always in the global level and in a
+separate name space. There is no special reason for this,
+it's just that I've never had any need for local macro
+definitions.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.SCOPE  Error                   ; Start new scope named Error
+        None = 0                ; No error
+        File = 1                ; File error
+        Parse = 2               ; Parse error
+\&.ENDSCOPE                       ; Close lexical level
+
+        ...
+        lda #Error::File        ; Use symbol from scope Error
+.Ed
+.Pp
+See:
+.Em .ENDSCOPE
+and
+.Em .PROC
+.Pp
+.It Em .SEGMENT
+Switch to another segment. Code and data is always emitted
+into a segment, that is, a named section of data. The
+default segment is "CODE". There may be up to 254 different
+segments per object file (and up to 65534 per executable).
+There are shortcut commands for the most common segments
+("ZEROPAGE", "CODE", "RODATA", "DATA", and "BSS").
+.Pp
+The command is followed by a string containing the segment
+name (there are some constraints for the name - as a rule of
+thumb use only those segment names that would also be valid
+identifiers). There may also be an optional address size
+separated by a colon. See the section covering address sizes
+for more information.
+.Pp
+The default address size for a segment depends on the memory
+model specified on the command line. The default is
+"absolute", which means that you don't have to use an
+address size modifier in most cases.
+.Pp
+"absolute" means that the is a segment with 16 bit
+(absolute) addressing. That is, the segment will reside
+somewhere in core memory outside the zero page. "zeropage"
+(8 bit) means that the segment will be placed in the zero
+page and direct (short) addressing is possible for data in
+this segment.
+.Pp
+Beware: Only labels in a segment with the zeropage attribute
+are marked as reachable by short addressing. The '*' (PC
+counter) operator will work as in other segments and will
+create absolute variable values.
+.Pp
+Please note that a segment cannot have two different address
+sizes. A segment specified as zeropage cannot be declared as
+being absolute later.
+.Pp
+Examples:
+.Bd -literal -offset indent
+\&.SEGMENT "ROM2"                 ; Switch to ROM2 segment
+\&.SEGMENT "ZP2": zeropage        ; New direct segment
+\&.SEGMENT "ZP2"                  ; Ok, will use last attribute
+\&.SEGMENT "ZP2": absolute        ; Error, redecl mismatch
+.Ed
+.Pp
+See:
+.Em .BSS Ns ,
+.Em .CODE Ns ,
+.Em .DATA Ns ,
+.Em .RODATA Ns ,
+and
+.Em .ZEROPAGE
+.Pp
+.It Em .SET
+.Em .SET
+is used to assign a value to a variable. See
+.Em Numeric variables
+for a full description.
+.Pp
+.It Em .SETCPU
+Switch the CPU instruction set. The command is followed by a
+string that specifies the CPU. Possible values are those
+that can also be supplied to the
+.Em --cpu
+command line option, namely: 6502, 6502X, 6502DTV, 65SC02,
+65C02, 65816, 4510 and HuC6280.
+.Pp
+See:
+.Em .CPU Ns ,
+.Em .IFP02 Ns ,
+.Em .IFPDTV Ns ,
+.Em .IFP816 Ns ,
+.Em .IFPC02 Ns ,
+.Em .IFPSC02 Ns ,
+.Em .P02 Ns ,
+.Em .P816 Ns ,
+.Em .P4510 Ns ,
+.Em .PC02 Ns ,
+.Em .PSC02
+.Pp
+.It Em .SMART
+Switch on or off smart mode. The command must be followed by
+a '+' or '-' character to switch the option on or off
+respectively. The default is off (that is, the assembler
+doesn't try to be smart), but this default may be changed by
+the -s switch on the command line.
+.Pp
+In smart mode the assembler will do the following:
+.Bl -dash -offset indent
+.It
+Track usage of the REP and SEP instructions in 65816 mode
+and update the operand sizes accordingly. If the operand of
+such an instruction cannot be evaluated by the assembler
+(for example, because the operand is an imported symbol), a
+warning is issued. Beware: Since the assembler cannot trace
+the execution flow this may lead to false results in some
+cases. If in doubt, use the .Inn and .Ann instructions to
+tell the assembler about the current settings.
+.It
+In 65816 mode, replace a RTS instruction by RTL if it is
+used within a procedure declared as far, or if the procedure
+has no explicit address specification, but it is far because
+of the memory model used.
+.El
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.SMART                          ; Be smart
+\&.SMART  -                       ; Stop being smart
+.Ed
+.Pp
+See:
+.Em .A16 Ns ,
+.Em .A8 Ns ,
+.Em .I16 Ns ,
+.Em .I8
+.Pp
+.It Em .STRUCT
+Starts a struct definition. Structs are covered in a
+separate section
+.Em STRUCTS AND UNIONS Ns .
+.Pp
+See also:
+.Em .ENDSTRUCT Ns ,
+.Em .ENDUNION Ns ,
+.Em .UNION
+.Pp
+.It Em .TAG
+Allocate space for a struct or union.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.STRUCT Point
+        xcoord  .WORD
+        ycoord  .WORD
+\&.ENDSTRUCT
+
+\&.BSS
+        .TAG    Point           ; Allocate 4 bytes
+.Ed
+.Pp
+.It Em .UNDEF Ns , Em .UNDEFINE
+Delete a define style macro definition. The command is
+followed by an identifier which specifies the name of the
+macro to delete. Macro replacement is switched of when
+reading the token following the command (otherwise the macro
+name would be replaced by its replacement list).
+.Pp
+See also the
+.Em .DEFINE
+command and sectio
+.Em MACROS Ns .
+.Pp
+.It Em .UNION
+Starts a union definition. Unions are covered in a separate
+section 
+.Em STRUCTS AND UNIONS Ns .
+.Pp
+See also:
+.Em .ENDSTRUCT Ns ,
+.Em .ENDUNION Ns ,
+.Em .STRUCT
+.Pp
+.It Em .WARNING
+Force an assembly warning. The assembler will output a
+warning message preceded by "User warning". This warning
+will always be output, even if other warnings are disabled
+with the
+.Em -W0
+command line option.
+.Pp
+This command may be used to output possible problems when
+assembling the source file.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.MACRO  jne     target
+        .LOCAL L1
+        .IFNDEF target
+        .WARNING "Forward jump in jne, cannot optimize!"
+        beq     L1
+        jmp     target
+L1:
+        .ELSE
+        ...
+        .ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+See also:
+.Em .ERROR Ns ,
+.Em .FATAL Ns ,
+.Em .OUT
+.Pp
+.It Em .WORD
+Define word sized data. Must be followed by a sequence of
+(word ranged, but not necessarily constant) expressions.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.WORD   $0D00, $AF13, _Clear
+.Ed
+.Pp
+.It Em .ZEROPAGE
+Switch to the ZEROPAGE segment and mark it as direct
+(zeropage) segment. The name of the ZEROPAGE segment is
+always "ZEROPAGE", so this is a shortcut for
+.Bd -literal -offset indent
+\&.SEGMENT  "ZEROPAGE": zeropage
+.Ed
+.Pp
+Because of the "zeropage" attribute, labels declared in this
+segment are addressed using direct addressing mode if
+possible. You must instruct the linker to place this segment
+somewhere in the address range 0..$FF otherwise you will get
+errors.
+.Pp
+See:
+.Em .SEGMENT
+.Pp
+.El
+.Sh MACROS
+Macros may be thought of as "parametrized super
+instructions". Macros are sequences of tokens that have a
+name. If that name is used in the source file, the macro is
+"expanded", that is, it is replaced by the tokens that were
+specified when the macro was defined.
+.Ss Macros without parameters
+In it's simplest form, a macro does not have parameters.
+.Pp
+An example:
+.Bd -literal -offset indent
+\&.MACRO  ASR             ; Arithmetic shift right
+        CMP     #$80    ; Put bit 7 into carry
+        ROR             ; Rotate right with carry
+\&.ENDMACRO
+.Ed
+.Pp
+The macro above consists of two real instructions, that are
+inserted into the code, whenever the macro is expanded.
+Macro expansion is simply done by using the name, like this:
+.Bd -literal -offset indent
+LDA     $2010
+ASR
+STA     $2010
+.Ed
+.Ss Parametrized Macros
+When using macro parameters, macros can be even more useful:
+.Bd -literal -offset indent
+\&.MACRO  INC16   addr
+        CLC
+        LDA     addr
+        ADC     #<$0001
+        STA     addr
+        LDA     addr+1
+        ADC     #>$0001
+        STA     addr+1
+\&.ENDMACRO
+.Ed
+.Pp
+When calling the macro, you may give a parameter, and each
+occurrence of the name "addr" in the macro definition will
+be replaced by the given parameter. So
+.Pp
+.Bd -literal -offset indent
+INC16   $1000
+.Ed
+.Pp
+will be expanded to
+.Bd -literal -offset indent
+CLC
+LDA     $1000
+ADC     #<$0001
+STA     $1000
+LDA     $1000+1
+ADC     #>$0001
+STA     $1000+1
+.Ed
+.Pp
+A macro may have more than one parameter, in this case, the
+parameters are separated by commas. You are free to give
+less parameters than the macro actually takes in the
+definition. You may also leave intermediate parameters
+empty. Empty parameters are replaced by empty space (that
+is, they are removed when the macro is expanded). If you
+have a look at our macro definition above, you will see,
+that replacing the "addr" parameter by nothing will lead to
+wrong code in most lines. To help you, writing macros with a
+variable parameter list, there are some control commands:
+.Pp
+.Em .IFBLANK
+tests the rest of the line and returns true, if
+there are any tokens on the remainder of the line. Since
+empty parameters are replaced by nothing, this may be used
+to test if a given parameter is empty.
+.Em .IFNBLANK
+tests the
+opposite.
+.Pp
+Look at this example:
+.Bd -literal -offset indent
+\&.MACRO  LDAXY   a, x, y
+\&.IFNBLANK       a
+        LDA     #a
+\&.ENDIF
+\&.IFNBLANK       x
+        LDX     #x
+\&.ENDIF
+\&.IFNBLANK       y
+        LDY     #y
+\&.ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+That macro may be called as follows:
+.Bd -literal -offset indent
+LDAXY   1, 2, 3         ; Load all three registers
+
+LDAXY   1, , 3          ; Load only a and y
+
+LDAXY   , , 3           ; Load y only
+.Ed
+.Pp
+There's another helper command for determining which macro
+parameters are valid:
+.Em .PARAMCOUNT Ns .
+That command is replaced by the parameter count given,
+including explicitly empty parameters:
+.Bd -literal -offset indent
+LDAXY   1       ; .PARAMCOUNT = 1
+LDAXY   1,,3    ; .PARAMCOUNT = 3
+LDAXY   1,2     ; .PARAMCOUNT = 2
+LDAXY   1,      ; .PARAMCOUNT = 2
+LDAXY   1,2,3   ; .PARAMCOUNT = 3
+.Ed
+.Pp
+Macro parameters may optionally be enclosed into curly
+braces. This allows the inclusion of tokens that would
+otherwise terminate the parameter (the comma in case of a
+macro parameter):
+.Bd -literal -offset indent
+\&.MACRO  FOO     arg1, arg2
+        ...
+\&.ENDMACRO
+
+        FOO     ($00,x)         ; Two parameters passed
+        FOO     {($00,x)}       ; One parameter passed
+.Ed
+.Pp
+In the first case, the macro is called with two parameters:
+\&'($00' and 'x)'. The comma is not passed to the macro,
+because it is part of the calling sequence, not the
+parameters.
+.Pp
+In the second case, '($00,x)' is passed to the macro; this
+time, including the comma.
+.Ss Detecting parameter types
+Sometimes it is nice to write a macro that acts differently
+depending on the type of the argument supplied. An example
+would be a macro that loads a 16 bit value from either an
+immediate operand, or from memory. The
+.Em .MATCH
+and
+.Em .XMATCH
+functions will allow you to do exactly this:
+.Bd -literal -offset indent
+\&.MACRO  LDAX    arg
+        .IF (.MATCH (.LEFT (1, {arg}), #))
+            ; immediate mode
+            LDA     #<(.RIGHT (.TCOUNT ({arg})-1, {arg}))
+            LDX     #>(.RIGHT (.TCOUNT ({arg})-1, {arg}))
+        .ELSE
+            ; assume absolute or zero page
+            LDA     arg
+            LDX     1+(arg)
+        .ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+Using the
+.Em .MATCH
+function, the macro is able to check if its argument begins
+with a hash mark. If so, two immediate loads are emitted,
+Otherwise a load from an absolute zero page memory location
+is assumed. Please note how the curly braces are used to
+enclose parameters to pseudo functions handling token lists.
+This is necessary, because the token lists may include
+commas or parens, which would be treated by the assembler as
+end-of-list.
+.Pp
+The macro can be used as
+.Bd -literal -offset indent
+FOO:    .WORD   $5678
+        ...
+        LDAX    #$1234          ; X=$12, A=$34
+        ...
+        LDAX    foo             ; X=$56, A=$78
+.Ed
+.Ss Recursive Macros
+Macros may be used recursively:
+.Bd -literal -offset indent
+\&.MACRO  PUSH    r1, r2, r3
+        LDA     r1
+        PHA
+\&.IFNBLANK       r2
+        PUSH    r2, r3
+\&.ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+There's also a special macro command to help with writing
+recursive macros:
+.Em .EXITMACRO Ns .
+That command will stop macro expansion immediately:
+.Bd -literal -offset indent
+\&.MACRO  PUSH    r1, r2, r3, r4, r5, r6, r7
+\&.IFBLANK        r1
+        ; First parameter is empty
+        .EXITMACRO
+\&.ELSE
+        LDA     r1
+        PHA
+\&.ENDIF
+        PUSH    r2, r3, r4, r5, r6, r7
+.Ed
+.Pp
+When expanding that macro, the expansion will push all given
+parameters until an empty one is encountered. The macro may
+be called like this:
+.Bd -literal -offset indent
+PUSH    $20, $21, $32   ; Push 3 ZP locations
+PUSH    $21             ; Push one ZP location
+.Ed
+.Ss Local symbols inside macros
+Now, with recursive macros,
+.Em .IFBLANK
+and
+.Em .PARAMCOUNT Ns ,
+what else do you need? Have a look at the inc16 macro above.
+Here is it again:
+.Bd -literal -offset indent
+\&.MACRO  INC16   addr
+        CLC
+        LDA     addr
+        ADC     #<$0001
+        STA     addr
+        LDA     addr+1
+        ADC     #>$0001
+        STA     addr+1
+\&.ENDMACRO
+.Ed
+.Pp
+If you have a closer look at the code, you will notice, that it could be written more efficiently, like this:
+.Bd -literal -offset indent
+\&.MACRO  INC16   addr
+        INC     addr
+        BNE     SKIP
+        INC     addr+1
+SKIP:
+\&.ENDMACRO
+.Ed
+.Pp
+But imagine what happens, if you use this macro twice? Since
+the label "SKIP" has the same name both times, you get a
+"duplicate symbol" error. Without a way to circumvent this
+problem, macros are not as useful, as they could be. One
+possible solution is the command
+.Em .LOCAL Ns .
+It declares one or more symbols as local to the macro
+expansion. The names of local variables are replaced by a
+unique name in each separate macro expansion. So we can
+solve the problem above by using
+.Em .LOCAL Ns :
+.Bd -literal -offset indent
+\&.MACRO  INC16   addr
+        .LOCAL  SKIP            ; Make Skip a local symbol
+        INC     addr
+        BNE     SKIP
+        INC     addr+1
+SKIP:                           ; Not visible outside
+\&.ENDMACRO
+.Ed
+.Pp
+Another solution is of course to start a new lexical block inside the macro that hides any labels:
+.Bd -literal -offset indent
+\&.MACRO  inc16   addr
+\&.PROC
+        INC     addr
+        BNE     SKIP
+        INC     addr+1
+SKIP:
+\&.ENDPROC
+\&.ENDMACRO
+.Ed
+.Ss C-style macros
+Starting with version 2.5 of the assembler, there is a
+second macro type available: C style macros using the
+.Em .DEFINE
+directive. These macros are similar to the classic macro
+type described above, but behaviour is sometimes different:
+.Bl -dash -offset indent
+.It
+Macros defined with
+.Em .DEFINE
+may not span more than a
+line. You may use line continuation (see
+.Em .LINECONT Ns )
+to
+spread the definition over more than one line for increased
+readability, but the macro itself may not contain an
+end-of-line token.
+.It
+Macros defined with
+.Em .DEFINE
+share the name space with classic macros, but they are
+detected and replaced at the scanner level. While classic
+macros may be used in every place, where a mnemonic or other
+directive is allowed,
+.Em .DEFINE
+style macros are allowed anywhere in a line. So they are
+more versatile in some situations.
+.It
+.Em .DEFINE
+style macros may take parameters. While classic macros may
+have empty parameters, this is not true for
+.Em .DEFINE
+style macros. For this macro type, the number of actual
+parameters must match exactly the number of formal
+parameters. To make this possible, formal parameters are
+enclosed in parentheses when defining the macro. If there
+are no parameters, the empty parentheses may be omitted.
+.It
+Since
+.Em .DEFINE
+style macros may not contain end-of-line tokens, there are
+things that cannot be done. They may not contain several
+processor instructions for example. So, while some things
+may be done with both macro types, each type has special
+usages. The types complement each other.
+.It
+Parentheses work differently from C macros. The common
+practice of wrapping C macros in parentheses may cause
+unintended problems here, such as accidentally implying an
+indirect addressing mode. While the definition of a macro
+requires parentheses around its argument list, when invoked
+they should not be included.
+.El
+.Ss Characters in macros
+When using the
+.Em -t
+option, characters are translated into the
+target character set of the specific machine. However, this
+happens as late as possible. This means that strings are
+translated if they are part of a
+.Em .BYTE
+or
+.Em .ASCIIZ
+command. Characters are translated as soon as they are used
+as part of an expression.
+.Pp
+This behaviour is very intuitive outside of macros but may
+be confusing when doing more complex macros. If you compare
+characters against numeric values, be sure to take the
+translation into account.
+.Ss Deleting macros
+Macros can be deleted. This will not work if the macro that
+should be deleted is currently expanded as in the following
+non-working example:
+.Bd -literal -offset indent
+\&.MACRO  NOTWORKING
+        .DELMACRO       NOTWORKING
+\&.ENDMACRO
+
+        NOTWORKING              ; Will not work
+.Ed
+.Pp
+The commands to delete classic and define style macros
+differ. Classic macros can be deleted by use of
+.Em .DELMACRO Ns ,
+while for
+.Em .DEFINE
+style macros,
+.Em .UNDEFINE
+must be used.
+.Pp
+Example:
+.Bd -literal -offset indent
+\&.DEFINE VALUE   1
+\&.MACRO  MAC
+        .BYTE   2
+\&.ENDMACRO
+
+        .BYTE   VALUE           ; Emit one byte with value 1
+        MAC                     ; Emit another byte with value 2
+
+\&.UNDEFINE value
+\&.DELMACRO mac
+
+        .BYTE   VALUE           ; Error: Unknown identifier
+        MAC                     ; Error: Missing ":"
+.Ed
+.Pp
+A separate command for
+.Em .DEFINE
+style macros was necessary, because the name of such a macro
+is replaced by its replacement list on a very low level. To
+get the actual name, macro replacement has to be switched
+off when reading the argument to
+.Em .UNDEFINE Ns .
+This does also mean that the argument to
+.Em .UNDEFINE
+is not allowed to come from another
+.Em .DEFINE Ns .
+All this is not necessary for classic macros, so having two
+different commands increases flexibility.
+.Sh MACRO PACKAGES
+Using the
+.Em .MACPACK
+directive, predefined macro packages may be included with
+just one command. Available macro packages are:
+.Ss generic
+This macro package defines macros that are useful in almost
+any program. Currently defined macros are:
+.Bl -tag -width "XXXXXXXXXXXX"
+.It ADD
+Add Without Carry
+.Bd -literal -offset indent
+\&.MACRO  ADD     arg
+        CLC
+        ADC     arg
+\&.ENDMACRO
+.Ed
+.It SUB
+Subtract without Borrow
+.Bd -literal -offset indent
+\&.MACRO  SUB     arg
+        SEC
+        SBC     arg
+\&.ENDMACRO
+.Ed
+.It BGE
+Branch if Greater-Than or Equal
+.Bd -literal -offset indent
+\&.MACRO  BGE     arg
+        BCS     arg
+\&.ENDMACRO
+.Ed
+.It BLT
+Branch on Less-Than
+.Bd -literal -offset indent
+\&.MACRO  BLT     arg
+        BCC     arg
+\&.ENDMACRO
+.Ed
+.It BGE
+Branch on Greater Than
+.Bd -literal -offset indent
+\&.MACRO  BGT     arg
+        .LOCAL  L
+        BEQ     L
+        BCS     arg
+L:
+\&.ENDMACRO
+.Ed
+.It BLE
+Branch on Less-Than or Eqaual
+.Bd -literal -offset indent
+\&.MACRO  BLE     arg
+        BEQ     arg
+        BCC     arg
+\&.ENDMACRO
+.Ed
+.It BNZ
+Branch on Not Zero
+.Bd -literal -offset indent
+\&.MACRO  BNZ     arg
+        BNE     arg
+\&.ENDMACRO
+.Ed
+.It BZE
+Branch on Zero
+.Bd -literal -offset indent
+\&.MACRO  BZE     arg     ; branch on zero
+        BEQ     arg
+\&.ENDMACRO
+.Ed
+.El
+.Ss longbranch
+This macro package defines long conditional jumps. They are
+named like the short counterpart but with the 'b' replaced
+by a 'j'. Here is a sample definition for the "JEQ" macro,
+the other macros are built using the same scheme:
+.Bd -literal -offset indent
+\&.MACRO  JEQ     Target
+        .IF     .DEF(Target) .AND ((*+2)-(Target) <= 127)
+        BEQ     Target
+        .ELSE
+        BNE     *+5
+        JMP     Target
+        .ENDIF
+\&.ENDMACRO
+.Ed
+.Pp
+All macros expand to a short branch, if the label is already
+defined (back jump) and is reachable with a short jump.
+Otherwise the macro expands to a conditional branch with the
+branch condition inverted, followed by an absolute jump to
+the actual branch target.
+.Pp
+The package defines the following macros:
+.Bl -tag -offset indent -width "XXXXXX"
+.It JEQ
+Jump if Equal
+.It JNE
+Jump if Not Equal
+.It JMI
+Jump if Minus
+.It JPL
+Jump if Plus
+.It JCS
+Jump if Carry Set
+.It JCC
+Jump if Carry Clear
+.It JVS
+Jump if Overflow Set
+.It JVC
+Jump if Overflow Clear
+.El
+.Ss apple2
+This macro package defines a macro named
+.Em srccode Ns .
+It takes a string as argument and emits the string
+translated into screen codes.
+.Ss atari
+Like
+.Em apple2 Ns ,
+but for atari.
+.Ss cbm
+Like
+.Em apple2 Ns ,
+but for commodore.
+.Ss cpu
+This macro package does not define any macros but does
+define constants used to examine the value read from the
+.Em .CPU
+pseudo variable. For each supported CPU a constant similar
+to
+.Bd -literal -offset indent
+CPU_6502
+CPU_65SC02
+CPU_65C02
+CPU_65816
+CPU_SWEET16
+CPU_HUC6280
+CPU_4510
+CPU_6502DTV
+.Ed
+.Pp
+is defined. These constants may be used to determine the
+exact type of the currently enabled CPU. In addition to
+that, for each CPU instruction set, another constant is
+defined:
+.Bd -literal -offset indent
+CPU_ISET_6502
+CPU_ISET_65SC02
+CPU_ISET_65C02
+CPU_ISET_65816
+CPU_ISET_SWEET16
+CPU_ISET_HUC6280
+CPU_ISET_4510
+CPU_ISET_6502DTV
+.Ed
+.Pp
+The value read from the
+.Em .CPU
+pseudo variable may be checked with
+.Em .BITAND
+to determine if the currently enabled CPU supports a
+specific instruction set. For example the 65C02 supports all
+instructions of the 65SC02 CPU, so it has the
+CPU_ISET_65SC02 bit set in addition to its native
+CPU_ISET_65C02 bit. Using
+.Bd -literal -offset indent
+\&.IF (.cpu .bitand CPU_ISET_65SC02)
+        LDA     (SP)
+\&.ELSE
+        LDY     #$00
+        LDA     (SP),Y
+\&.ENDIF
+.Ed
+.Pp
+it is possible to determine if the
+.Pp
+.Bd -literal -offset indent
+\&.LDA     (SP)
+.Ed
+.Pp
+instruction is supported, which is the case for the 65SC02,
+65C02 and 65816 CPUs (the latter two are upwards compatible
+to the 65SC02).
+.Ss module
+This macro package defines a macro named
+.Em module_header Ns .
+It takes an identifier as argument and is used to define the
+header of a module both in the dynamic and static variant.
+.Sh PREDEFINED CONSTANTS
+For better orthogonality, the assembler defines similar
+symbols as the compiler, depending on the target system
+selected:
+.Bl -tag -width "XXXXXXXXXXXXXXXXX"
+.It __APPLE2__
+Target system is apple2 or apple2enh
+.It __APPLE2ENH__
+Target system is apple2enh
+.It __ATARI2600__
+Target system is atari2600
+.It __ATARI5200__
+Target system is atari5200
+.It __ATARI__
+Target system is atari or atarixl
+.It __ATARIXL__
+Target system is atarixl
+.It __ATMOS__
+Target system is atmos
+.It __BBC__
+Target system is bbc
+.It __C128__
+Target system is c128
+.It __C16__
+Target system is c16 or plus4
+.It __C64__
+Target system is c64
+.It __CBM__
+Target is a Commodore or Commodore-alike system
+.It __CBM510__
+Target system is cbm510
+.It __CBM610__
+Target system is cbm610
+.It __CX16__
+Target system is cx16
+.It __GEOS__
+Target is a GEOS system
+.It __GEOS_APPLE__
+Target system is geos-apple
+.It __GEOS_CBM__
+Target system is geos-cbm
+.It __LUNIX__
+Target system is lunix
+.It __LYNX__
+Target system is lynx
+.It __NES__
+Target system is nes
+.It __OSIC1P__
+Target system is osic1p
+.It __PET__
+Target system is pet
+.It __PLUS4__
+Target system is plus4
+.It __SIM6502__
+Target system is sim6502
+.It __SIM65C02__
+Target system is sim65c02
+.It __SUPERVISION__
+Target system is supervision
+.It __VIC20__
+Target system is vic20
+.El
+.Sh STRUCTS AND UNIONS
+.Ss Structs and Unions Overview
+Structs and unions are special forms of
+.Em SCOPES Ns .
+They are, to some degree, comparable to their C
+counterparts. Both have a list of members. Each member
+allocates storage, and optionally may have a name whose
+value, in the case of a struct, usually is the storage
+offset from the beginning, and in the case of a union,
+doesn't change, and usually is zero.
+.Ss Declaration
+Here is an example for a very simple struct with two members
+and a total size of 4 bytes:
+.Bd -literal -offset indent
+\&.STRUCT point
+      xcoord  .WORD
+      ycoord  .WORD
+\&.ENDSTRUCT
+.Ed
+.Pp
+A union shares the total space between all its members; its
+size is the same as that of the largest member. The offset
+of all members relative to the union is zero.
+.Bd -literal -offset indent
+\&.UNION  entry
+      index   .WORD
+      ptr     .ADDR
+\&.ENDUNION
+.Ed
+.Pp
+A struct or union may not necessarily have a name. If it is
+anonymous, no local scope is opened; the identifiers used to
+name the members are placed into the current scope instead.
+.Pp
+A struct may contain unnamed members and definitions of
+local structs/unions. The storage allocators may contain a
+multiplier, as in the example below:
+.Bd -literal -offset indent
+\&.STRUCT circle
+      .STRUCT point
+              .WORD   2         ; Allocate two words
+      .ENDSTRUCT
+      radius  .WORD
+\&.ENDSTRUCT
+.Ed
+.Pp
+The size of the circle struct is 6 bytes (three words).
+.Ss The storage allocator keywords
+.Bl -tag -width "XXXXXXXXXXXX"
+.It .BYTE Ns , Em .RES
+Allocates multiples of 1 byte
+.Em .RES
+requires an operand.
+.It .DBYTE Ns , Em .WORD Ns , Em .ADDR
+Allocates multiples of 2 bytes.
+.It .FARADDR
+Allocates multiples of 3 bytes.
+.It .DWORD
+Allocates multiples of 4 bytes
+.El
+.Ss The Em .ORG No keyword
+The
+.Em .ORG
+keyword changes the offset value that is assigned to
+subsequent member names. It's useful when using a struct to
+define the names of the registers in an I/O chip.
+.Pp
+Example:
+.Bd -literal -offset indent
+; 6551
+\&.STRUCT acia            ; Asynchronous Communications Interface Adapter
+        .ORG    $031C
+data    .BYTE
+status  .BYTE
+cmd     .BYTE           ; Command register
+ctrl    .BYTE           ; Control register
+\&.ENDSTRUCT
+
+            lda     acia::data      ; Get an RS-232 character
+.Ed
+.Ss The Em .TAG No keyword
+By using the
+.Em .TAG
+keyword, it is possible to reserve space for an already
+defined struct or union within another struct:
+.Bd -literal -offset indent
+\&.STRUCT point
+      xcoord  .WORD
+      ycoord  .WORD
+\&.ENDSTRUCT
+
+\&.STRUCT circle
+      origin  .TAG    point
+      radius  .BYTE
+\&.ENDSTRUCT
+.Ed
+.Pp
+Actual space for a struct or union may be allocated by using
+the .TAG directive.
+.Pp
+.Bd -literal -offset indent
+c:      .TAG    circle
+.Ed
+.Pp
+Currently, members are just offsets from the start of the
+struct or union. To access a field of a struct, the member
+offset must be added to the address of the struct variable
+itself:
+.Pp
+.Bd -literal -offset indent
+LDA     c+circle::radius        ; Load circle radius into A
+.Ed
+.Pp
+.Ss Limitations
+Structs and unions currently are implemented as nested
+symbol tables (in fact, they were a by-product of the
+improved scoping rules). Currently, the assembler has no
+idea of types. That means that the
+.Em .TAG
+keyword only will allocate space. You won't be able to
+initialize variables declared with
+.Em .TAG Ns ;
+and, adding an embedded structure to another structure with
+.Em .TAG
+will not make that added structure accessible by using the
+\&'::' operator. That may change in a future version of the
+assembler.
+.Sh MODULE CONSTRUCTORS & DESTRUCTORS
+.Em Note Ns :
+This section applies mostly to C programs, so the
+explanation below uses examples from the C libraries.
+However, the feature may also be useful for assembler
+programs.
+.Ss Module Constructors & Destructors Overview
+Using the
+.Em .CONSTRUCTOR Ns ,
+.Em .DESTRUCTOR Ns , and
+.Em .INTERRUPTOR
+keywords it is possible to export functions in a special
+way. The linker is able to generate tables with all
+functions of a specific type. Such a table will only include
+symbols from object files that are linked into a specific
+executable. This may be used to add initialization and
+cleanup code for library modules, or a table of interrupt
+handler functions.
+.Pp
+The C heap functions are an example where module
+initialization code is used. All heap functions (malloc,
+free, ...) work with a few variables that contain the start
+and the end of the heap, pointers to the free list and so
+on. Since the end of the heap depends on the size and start
+of the stack, it must be initialized at runtime. However,
+initializing these variables for programs that do not use
+the heap are a waste of time and memory.
+.Pp
+So the central module defines a function that contains
+initialization code and exports this function using the
+.Em .CONSTRUCTOR
+statement. If (and only if) this module is added to an
+executable by the linker, the initialization function will
+be placed into the table of constructors by the linker. The
+C startup code will call all constructors before main and
+all destructors after main, so without any further work, the
+heap initialization code is called once the module is linked
+in.
+.Pp
+While it would be possible to add explicit calls to
+initialization functions in the startup code, the new
+approach has several advantages:
+.Bl -enum -offset indent
+.It
+If a module is not included, the initialization code is
+not linked in and not called. So you don't pay for things
+you don't need.
+.It
+Adding another library that needs
+initialization does not mean that the startup code has to be
+changed. Before we had module constructors and destructors,
+the startup code for all systems had to be adjusted to call
+the new initialization code.
+.It
+The feature saves memory: Each
+additional initialization function needs just two bytes in
+the table (a pointer to the function).
+.El
+.Ss Calling Order
+The symbols are sorted in increasing priority order by the
+linker when using one of the builtin linker configurations,
+so the functions with lower priorities come first and are
+followed by those with higher priorities. The C library
+runtime subroutine that walks over the function tables calls
+the functions starting from the top of the table - which
+means that functions with a high priority are called first.
+.Pp
+So when using the C runtime, functions are called with high
+priority functions first, followed by low priority
+functions.
+.Ss Pitfalls
+When using these special symbols, please take care of the following:
+.Bl -dash -offset indent
+.It
+The linker will only generate function tables, it will not
+generate code to call these functions. If you're using the
+feature in some other than the existing C environments, you
+have to write code to call all functions in a linker
+generated table yourself. See the condes and callirq modules
+in the C runtime for an example on how to do this.
+.It
+The linker will only add addresses of functions that are in
+modules linked to the executable. This means that you have
+to be careful where to place the condes functions. If
+initialization or an irq handler is needed for a group of
+functions, be sure to place the function into a module that
+is linked in regardless of which function is called by the
+user.
+.It
+The linker will generate the tables only when requested to
+do so by the FEATURE CONDES statement in the linker config
+file. Each table has to be requested separately. See
+.Xr ld65 1 Ns .
+.It
+Constructors and destructors may have priorities. These
+priorities determine the order of the functions in the
+table. If your initialization or cleanup code does depend on
+other initialization or cleanup code, you have to choose the
+priority for the functions accordingly.
+.It
+Besides the
+.Em .CONSTRUCTOR Ns ,
+.Em .DESTRUCTOR Ns , and
+.Em .INTERRUPTOR
+statements, there is also a more generic command:
+.Em .CONDES Ns .
+This allows to specify an additional type. Predefined types
+are 0 (constructor), 1 (destructor) and 2 (interruptor). The
+linker generates a separate table for each type on request.
+.El
+.Sh PORTING SOURCES FROM OTHER ASSEMBLERS
+Sometimes it is necessary to port code written for older
+assemblers to ca65. In some cases, this can be done without
+any changes to the source code by using the emulation
+features of ca65 (see
+.Em .FEATURE Ns ).
+In other cases, it is necessary to make changes to the
+source code.
+.Pp
+Probably the biggest difference is the handling of the
+.Em .ORG
+directive. ca65 generates relocatable code, and placement is
+done by the linker. Most other assemblers generate absolute
+code, placement is done within the assembler and there is no
+external linker.
+.Pp
+In general it is not a good idea to write new code using the
+emulation features of the assembler, but there may be
+situations where even this rule is not valid.
+.Ss TASS
+You need to use some of the ca65 emulation features to
+simulate the behaviour of such simple assemblers:
+.Bl -enum -offset indent
+.It
+Prepare your sourcecode like this:
+.Bd -literal -offset indent
+; if you want TASS style labels without colons
+\&.FEATURE labels_without_colons
+
+; if you want TASS style character constants
+; ("a" instead of the default 'a')
+\&.FEATURE loose_char_term
+
+        .WORD *+2       ; the cbm load address
+
+        [your code here]
+.Ed
+.Pp
+Notice that the two emulation features are mostly useful for
+porting sources originally written in/for TASS, they are not
+needed for the actual "simple assembler operation" and are
+not recommended if you are writing new code from scratch. 
+.It
+Replace all program counter assignments (which are not
+possible in ca65 by default, and the respective emulation
+feature works different from what you'd expect) by another
+way to skip to memory locations, for example the
+.Em .RES
+directive:
+.Bd -literal -offset indent
+; *=$2000
+\&.RES $2000-*    ; reserve memory up to $2000
+.Ed
+.Pp
+Please note that other than the original TASS, ca65 can
+never move the program counter backwards - think of it as if
+you are assembling to disk with TASS. 
+.It
+Conditional assembly
+.Pf ( Em .IFEQ Ns / Ns Em .ENDIF Ns / Ns Em .GOTO
+etc.) must be rewritten to match ca65 syntax. Most
+importantly notice that due to the lack of
+.Em .GOTO Ns ,
+everything involving loops must be replaced by
+.Em .REPEAT Ns . 
+.It
+To assemble code to a different address than it is executed
+at, use the
+.Em .ORG
+directive instead of
+.Em .offs Ns -constructs:
+.Bd -literal -offset indent
+\&.ORG $1800
+
+[floppy code here]
+
+\&.RELOC  ; back to normal
+.Ed
+.It
+Then assemble like this:
+.Pp
+.Bd -literal -offset indent
+cl65 --start-addr 0x0ffe -t none myprog.s -o myprog.prg
+.Ed
+.Pp
+Note that you need to use the actual start address minus
+two, since two bytes are used for the cbm load address. 
+.El
+.Sh AUTHORS
+Program Author: Ullrich von Bassewitz <\fIwebmaster@von-bassewitz.de\fR>
+.br
+Manpage Author: Jake Grossman         <\fIjake.r.grossman@gmail.com\fR>
+.Sh COPYRIGHT
+sp65 (and all cc65 binutils) are (C) Copyright 1998-20003
+Ullrich von Bassewitz. For usage of the binaries and/or
+sources the following conditions do apply:
+.Pp
+This software is provided 'as-is', without any expressed or
+implied warranty. In no event will the authors be held
+liable for any damages arising from the use of this
+software.
+.Pp
+Permission is granted to anyone to use this software for any
+purpose, including commercial applications, and to alter it
+and redistribute it freely, subject to the following
+restrictions:
+.Bl -enum -offset indent
+.It
+The origin of this software must not be misrepresented; you
+must not claim that you wrote the original software. If you
+use this software in a product, an acknowledgment in the
+product documentation would be appreciated but is not
+required.
+.It
+Altered source versions must be plainly marked as such, and
+must not be misrepresented as being the original software.
+.It
+This notice may not be removed or altered from any source
+distribution.
+.El
+.Sh SEE ALSO
+.Xr cc65 1 ,
+.Xr ca65 1
+.\" vim: set ts=8 sts=8 sw=8 et tw=60 :
